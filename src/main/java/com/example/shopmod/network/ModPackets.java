@@ -72,6 +72,7 @@ public final class ModPackets {
     public static final CustomPacketPayload.Type<TakeStoragePayload>    TAKE_STORAGE_ID     = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "take_storage"));
     public static final CustomPacketPayload.Type<OpenShopFromListPayload> OPEN_SHOP_FROM_LIST_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "open_shop_from_list"));
     public static final CustomPacketPayload.Type<CreateShopFromListPayload> CREATE_SHOP_FROM_LIST_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "create_shop_from_list"));
+    public static final CustomPacketPayload.Type<ToggleShopMovePayload> TOGGLE_SHOP_MOVE_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "toggle_shop_move"));
 
     // Shop entry info for the list
     public record ShopEntryInfo(String ownerName, long uuidMost, long uuidLeast, int offerCount) {}
@@ -312,6 +313,17 @@ public final class ModPackets {
             );
 
         @Override public CustomPacketPayload.Type<? extends CustomPacketPayload> type() { return ID; }
+    }
+
+    public record ToggleShopMovePayload(String shopName, boolean enabled) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, ToggleShopMovePayload> CODEC = StreamCodec.of(
+            (buf, v) -> {
+                buf.writeUtf(v.shopName());
+                buf.writeBoolean(v.enabled());
+            },
+            buf -> new ToggleShopMovePayload(buf.readUtf(), buf.readBoolean())
+        );
+        @Override public CustomPacketPayload.Type<ToggleShopMovePayload> type() { return TOGGLE_SHOP_MOVE_ID; }
     }
 
     public record ShopNavPayload(List<String> ownerNames) implements CustomPacketPayload {

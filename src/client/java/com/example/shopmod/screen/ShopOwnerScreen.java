@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 
 import java.util.List;
 
@@ -23,17 +24,23 @@ public class ShopOwnerScreen extends Screen {
     private ShopData shopData;
     private ItemStack pendingSell = ItemStack.EMPTY, pendingBuy = ItemStack.EMPTY;
     private int page = 0;
+    private boolean shopMoveEnabled = false;
     private static final int PER_PAGE = 4, ROW_HEIGHT = 28, SLOT_SIZE = 28;
-    private static final int W = 360, H = 270;
+    private static final int W = 380, H = 270;
     private int sellSlotX, sellSlotY, buySlotX, buySlotY;
 
     public ShopOwnerScreen(String shopName, ShopData data) {
         super(Component.literal(shopName + " - Shop Manager"));
         this.shopName = shopName; this.shopData = data;
+        this.shopMoveEnabled = data.isShopMoveEnabled();
     }
 
     public void rebuild() { clearWidgets(); init(); }
-    public void refreshData(ShopData data) { this.shopData = data; clearWidgets(); init(); }
+    public void refreshData(ShopData data) {
+        this.shopData = data;
+        this.shopMoveEnabled = data.isShopMoveEnabled();
+        clearWidgets(); init();
+    }
     public void setPendingBuyItem(ItemStack s) { this.pendingBuy = s; }
     public void setPendingSellItem(ItemStack s) { this.pendingSell = s; }
 
@@ -50,16 +57,26 @@ public class ShopOwnerScreen extends Screen {
         buySlotX = slotCenterX; buySlotY = py + 62;
 
         addRenderableWidget(Button.builder(Component.literal("Storage"),
-            btn -> ClientPlayNetworking.send(new ModPackets.ReqStoragePayload(shopName))).bounds(px + 250, py + 28, 90, 24).build());
-        addRenderableWidget(Button.builder(Component.literal("Add Offer"), btn -> submitTrade()).bounds(px + 250, py + 60, 90, 24).build());
+            btn -> ClientPlayNetworking.send(new ModPackets.ReqStoragePayload(shopName))).bounds(px + 260, py + 28, 90, 24).build());
+        addRenderableWidget(Button.builder(Component.literal("Add Offer"), btn -> submitTrade()).bounds(px + 260, py + 60, 90, 24).build());
 
-        // Delete buttons for trades - rebuilt each time init() is called
+        // Shop Move toggle button with colored On (green) / Off (red)
+        Component moveLabel = Component.literal("Shop Move: ")
+            .append(Component.literal(shopMoveEnabled ? "On" : "Off")
+                .setStyle(Style.EMPTY.withColor(shopMoveEnabled ? 0x55FF55 : 0xFF5555).withBold(true)));
+        addRenderableWidget(Button.builder(moveLabel, btn -> {
+            shopMoveEnabled = !shopMoveEnabled;
+            ClientPlayNetworking.send(new ModPackets.ToggleShopMovePayload(shopName, shopMoveEnabled));
+            clearWidgets(); init();
+        }).bounds(px + 160, py + 44, 90, 24).build());
+
+        // Delete buttons for trades
         List<ShopData.ShopTrade> trades = shopData.getTrades();
         int start = page * PER_PAGE, end = Math.min(start + PER_PAGE, trades.size());
         for (int i = start; i < end; i++) {
             final int idx = i, row = i - start;
-            addRenderableWidget(Button.builder(Component.literal("X"),
-                btn -> ClientPlayNetworking.send(new ModPackets.RemoveTradePayload(shopName, idx))).bounds(px + 275, py + 120 + row * ROW_HEIGHT, 26, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("Cancel X"),
+                btn -> ClientPlayNetworking.send(new ModPackets.RemoveTradePayload(shopName, idx))).bounds(px + 278, py + 120 + row * ROW_HEIGHT, 70, 20).build());
         }
 
         int total = Math.max(1, (int) Math.ceil(trades.size() / (double) PER_PAGE));
@@ -108,7 +125,6 @@ public class ShopOwnerScreen extends Screen {
         drawBorder(ctx, sellSlotX, sellSlotY, SLOT_SIZE, SLOT_SIZE, pendingSell.isEmpty() ? 0xFF888888 : 0xFF00FF00);
         if (!pendingSell.isEmpty()) {
             drawItemWithCount(ctx, pendingSell, sellSlotX + 6, sellSlotY + 6);
-            ctx.drawString(font, Component.literal("x" + pendingSell.getCount()), sellSlotX + SLOT_SIZE + 3, sellSlotY + 10, 0xFF55FF55);
         }
 
         ctx.drawString(font, Component.literal("Item Price:"), px + 14, py + 70, 0xFFFFFF00);
@@ -117,15 +133,16 @@ public class ShopOwnerScreen extends Screen {
         drawBorder(ctx, buySlotX, buySlotY, SLOT_SIZE, SLOT_SIZE, pendingBuy.isEmpty() ? 0xFF888888 : 0xFFFFFF00);
         if (!pendingBuy.isEmpty()) {
             drawItemWithCount(ctx, pendingBuy, buySlotX + 6, buySlotY + 6);
-            ctx.drawString(font, Component.literal("x" + pendingBuy.getCount()), buySlotX + SLOT_SIZE + 3, buySlotY + 10, 0xFFFFFF00);
         }
 
         ctx.fill(px + 8, py + 100, px + W - 8, py + H - 36, 0x66000000);
         drawBorder(ctx, px + 8, py + 100, W - 16, H - 136, 0xFF666666);
         ctx.drawString(font, Component.literal("Item"), px + 40, py + 106, 0xFF55FF55);
         ctx.drawString(font, Component.literal("Price"), px + 140, py + 106, 0xFFFFFF00);
-        ctx.drawString(font, Component.literal("Cancel"), px + 275, py + 106, 0xFFFF5555);
+        ctx.drawString(font, Component.literal("Cancel"), px + 290, py + 106, 0xFFFF5555);
         ctx.fill(px + 8, py + 118, px + W - 8, py + 119, 0xFF666666);
+        ctx.fill(px + 125, py + 100, px + 126, py + H - 36, 0xFF555555);
+        ctx.fill(px + 255, py + 100, px + 256, py + H - 36, 0xFF555555);
 
         List<ShopData.ShopTrade> trades = shopData.getTrades();
         int start = page * PER_PAGE, end = Math.min(start + PER_PAGE, trades.size());
@@ -148,7 +165,6 @@ public class ShopOwnerScreen extends Screen {
         ctx.drawString(font, Component.literal("Page " + (page+1) + "/" + total + " | Offers: " + trades.size()), px + W / 2 + 10, py + H - 24, 0xFFFFFFFF);
         super.render(ctx, mx, my, delta);
 
-        // Proper tooltip rendering for pending items
         if (!pendingSell.isEmpty() && sellHov) {
             ctx.setTooltipForNextFrame(font, pendingSell, mx, my);
         }
@@ -156,7 +172,6 @@ public class ShopOwnerScreen extends Screen {
             ctx.setTooltipForNextFrame(font, pendingBuy, mx, my);
         }
 
-        // Proper tooltip rendering for trade list items
         for (int ti = start; ti < end; ti++) {
             ShopData.ShopTrade t = trades.get(ti);
             int ry2 = py + 123 + (ti - start) * ROW_HEIGHT;
@@ -189,7 +204,6 @@ public class ShopOwnerScreen extends Screen {
     private void submitTrade() {
         if (pendingSell.isEmpty()) { msg("Select item to sell first!"); return; }
         if (pendingBuy.isEmpty())  { msg("Set the price first!"); return; }
-        // Always use NBT packet to preserve enchantments and all components
         ClientPlayNetworking.send(new ModPackets.AddEnchantedBookTradePayload(shopName, ShopData.itemStackToNbt(pendingSell), ShopData.itemStackToNbt(pendingBuy)));
         pendingSell = ItemStack.EMPTY; pendingBuy = ItemStack.EMPTY;
         ClientPacketHandler.PendingSellHolder.clear(); ClientPacketHandler.PendingBuyHolder.clear();

@@ -59,7 +59,7 @@ public class InventorySelectScreen extends Screen {
 
         addRenderableWidget(Button.builder(Component.literal("\u2714"), btn -> {
             if (!selectedStack.isEmpty()) {
-                removeFromRealInventory();
+                // NO client-side removal - server handles it via ADD_BOOK_TRADE_ID handler
                 ClientPacketHandler.PendingSellHolder.shopName = shopName;
                 ClientPacketHandler.PendingSellHolder.sellItem = selectedStack.copy();
                 ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName));
@@ -70,22 +70,6 @@ public class InventorySelectScreen extends Screen {
             ClientPacketHandler.PendingSellHolder.clear();
             ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName));
         }).bounds(specialSlotX + SLOT_SIZE + 4, specialSlotY + SLOT_SIZE + 4, SLOT_SIZE, SLOT_SIZE).build());
-    }
-
-    private void removeFromRealInventory() {
-        if (this.minecraft == null || this.minecraft.player == null) return;
-        Inventory inv = this.minecraft.player.getInventory();
-
-        int toRemove = selectedStack.getCount();
-        for (int i = 0; i < 36 && toRemove > 0; i++) {
-            ItemStack realStack = inv.getItem(i);
-            if (!realStack.isEmpty() && ItemStack.isSameItemSameComponents(realStack, selectedStack)) {
-                int take = Math.min(toRemove, realStack.getCount());
-                realStack.shrink(take);
-                toRemove -= take;
-            }
-        }
-        inv.setChanged();
     }
 
     private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {

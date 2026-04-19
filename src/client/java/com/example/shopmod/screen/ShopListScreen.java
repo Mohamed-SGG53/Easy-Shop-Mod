@@ -5,26 +5,24 @@ import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.entity.player.PlayerSkin;
+import net.minecraft.world.item.component.ResolvableProfile;
 
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.lang.reflect.Modifier;
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Environment(EnvType.CLIENT)
 public class ShopListScreen extends Screen {
@@ -40,26 +38,34 @@ public class ShopListScreen extends Screen {
     private static final int ROW_HEIGHT = 24, VISIBLE_SHOPS = 7, FACE_SIZE = 18;
     private static final int W = 300, H = 230;
 
-    // ==================== Skin face rendering via reflection ====================
-    // Mirrors Yarn approach: mc.getPlayerSkinCache().get(profile) → SkinTextures → PlayerSkinDrawer.draw()
-    // All class/method names discovered at runtime to avoid Official Mapping name mismatches.
+    private static final Map<UUID, PlayerSkin> SKIN_CACHE = new ConcurrentHashMap<>();
+    private static final Path SKIN_DIR = Paths.get("config", "shopmod", "skins");
 
-    private static volatile boolean skinSystemReady = false;
-    private static volatile Method mcGetSkinCacheMethod = null;    // mc.getXxxSkinCache()
-    private static volatile Object skinCacheRef = null;             // the cache object
-    private static volatile Method cacheGetMethod = null;           // cache.get(ResolvableProfile) → Entry
-    private static volatile Method entryGetTexturesMethod = null;   // entry.getTextures() → SkinTextures
-    private static volatile Method drawerDrawMethod = null;         // PlayerSkinDrawer.draw(ctx, textures, x, y, size)
-    private static volatile Class<?> drawerClass = null;            // PlayerSkinDrawer class
-    private static volatile Method createProfileMethod = null;      // ResolvableProfile.ofStatic(profile) or equivalent
-    private static volatile Constructor<?> profileStaticCtor = null;// ResolvableProfile.Static constructor
-    private static volatile Method skinTexturesTextureMethod = null;// skinTextures.texture() → Identifier (for manual blit)
-    private static volatile Method defaultSkinHelperMethod = null;  // DefaultSkinHelper.getSkinTextures(uuid)
+    private static volatile boolean skinMethodsResolved = false;
+    private static volatile Object skinCacheRef = null;
+    private static volatile Method cacheGetterMethod = null;
+    private static volatile Method cacheGetByUUID = null;
+    private static volatile Method cacheGetByRP = null;
+    private static volatile Method entrySkinMethod = null;
+
+    private static volatile boolean resolvePending = true;
+    private static final Set<UUID> diskLoaded = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> diskSaved = ConcurrentHashMap.newKeySet();
+
+    private static volatile Method defaultSkinMethod = null;
+    private static volatile boolean defaultSkinResolved = false;
 
     private static class ShopEntry {
-        final String ownerName; final UUID uuid; final int offerCount; final boolean isOwnShop;
+        final String ownerName;
+        final UUID uuid;
+        final int offerCount;
+        final boolean isOwnShop;
+
         ShopEntry(String ownerName, UUID uuid, int offerCount, boolean isOwnShop) {
-            this.ownerName = ownerName; this.uuid = uuid; this.offerCount = offerCount; this.isOwnShop = isOwnShop;
+            this.ownerName = ownerName;
+            this.uuid = uuid;
+            this.offerCount = offerCount;
+            this.isOwnShop = isOwnShop;
         }
     }
 
@@ -77,370 +83,403 @@ public class ShopListScreen extends Screen {
     }
 
     private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
-        ctx.fill(x, y, x + w, y + 1, color); ctx.fill(x, y + h - 1, x + w, y + h, color);
-        ctx.fill(x, y, x + 1, y + h, color); ctx.fill(x + w - 1, y, x + w, y + h, color);
+        ctx.fill(x, y, x + w, y + 1, color);
+        ctx.fill(x, y + h - 1, x + w, y + h, color);
+        ctx.fill(x, y, x + 1, y + h, color);
+        ctx.fill(x + w - 1, y, x + w, y + h, color);
     }
 
-    // ==================== Skin System Initialization ====================
+    // ==================== Default Skin (Steve/Alex) via Reflection ====================
 
-    /**
-     * One-time init: discovers all Official Mapping class/method names via reflection.
-     * Searches for the same pipeline as Yarn: Minecraft → SkinCache → get(profile) → textures → draw.
-     */
-    private static synchronized void initSkinSystem() {
-        if (skinSystemReady) return;
-        skinSystemReady = true;
-
+    private static synchronized void resolveDefaultSkinMethod() {
+        if (defaultSkinResolved) return;
+        defaultSkinResolved = true;
         try {
-            // Step 1: Find ResolvableProfile.Static constructor (for creating profile from GameProfile)
-            Class<?> rpClass = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
-            for (Class<?> inner : rpClass.getDeclaredClasses()) {
-                for (Constructor<?> ctor : inner.getDeclaredConstructors()) {
-                    Class<?>[] pt = ctor.getParameterTypes();
-                    if (pt.length == 1 || pt.length == 2) {
-                        ctor.setAccessible(true);
-                        profileStaticCtor = ctor;
-                        break;
-                    }
-                }
-                if (profileStaticCtor != null) break;
-            }
+            Method uuidMethod = null;
+            Method noArgMethod = null;
 
-            // Also try static factory methods on ResolvableProfile
-            for (Method m : rpClass.getDeclaredMethods()) {
-                if (java.lang.reflect.Modifier.isStatic(m.getModifiers()) &&
-                    m.getParameterCount() == 1 &&
-                    m.getParameterTypes()[0].isAssignableFrom(GameProfile.class)) {
-                    m.setAccessible(true);
-                    createProfileMethod = m;
-                    break;
+            for (Method m : DefaultPlayerSkin.class.getDeclaredMethods()) {
+                if (!Modifier.isStatic(m.getModifiers())) continue;
+                if (m.getReturnType() != PlayerSkin.class) continue;
+
+                if (m.getParameterCount() == 1 && m.getParameterTypes()[0] == UUID.class) {
+                    uuidMethod = m;
+                } else if (m.getParameterCount() == 0 && noArgMethod == null) {
+                    noArgMethod = m;
                 }
             }
 
-            // Step 2: Find DefaultSkinHelper.getSkinTextures(UUID) for fallback
-            for (String dshClass : new String[]{
-                "net.minecraft.client.resources.DefaultSkinHelper",
-                "net.minecraft.client.util.DefaultSkinHelper",
-                "net.minecraft.client.gui.components.player.DefaultSkinHelper"
-            }) {
-                try {
-                    Class<?> cls = Class.forName(dshClass);
-                    for (Method m : cls.getDeclaredMethods()) {
-                        if (java.lang.reflect.Modifier.isStatic(m.getModifiers()) &&
-                            m.getParameterCount() == 1 && m.getParameterTypes()[0] == UUID.class) {
-                            m.setAccessible(true);
-                            defaultSkinHelperMethod = m;
-                            break;
-                        }
-                    }
-                    if (defaultSkinHelperMethod != null) break;
-                } catch (ClassNotFoundException ignored) {}
+            if (uuidMethod != null) {
+                defaultSkinMethod = uuidMethod;
+            } else if (noArgMethod != null) {
+                defaultSkinMethod = noArgMethod;
             }
 
-            // Step 3: Find the skin cache on Minecraft instance
-            // The cache has a method accepting ResolvableProfile as parameter
-            Object mc = net.minecraft.client.Minecraft.getInstance();
-
-            // First try known method name patterns
-            for (Method m : mc.getClass().getMethods()) {
-                if (m.getParameterCount() != 0 || m.getReturnType() == void.class) continue;
-                String n = m.getName();
-                if (n.contains("Skin") || n.contains("skin") || n.contains("Profile") || n.contains("profile")) {
-                    try {
-                        Object obj = m.invoke(mc);
-                        if (obj == null) continue;
-                        Method getM = findCacheGetMethod(obj.getClass(), rpClass);
-                        if (getM != null) {
-                            mcGetSkinCacheMethod = m;
-                            skinCacheRef = obj;
-                            cacheGetMethod = getM;
-                            break;
-                        }
-                    } catch (Exception ignored) {}
-                }
+            if (defaultSkinMethod != null) {
+                System.out.println("[ShopMod] Default skin method: " + defaultSkinMethod.getName() + " (params: " + defaultSkinMethod.getParameterCount() + ")");
             }
-
-            // Broader search if not found
-            if (skinCacheRef == null) {
-                for (Method m : mc.getClass().getMethods()) {
-                    if (m.getParameterCount() != 0 || m.getReturnType() == void.class || m.getReturnType().isPrimitive()) continue;
-                    try {
-                        Object obj = m.invoke(mc);
-                        if (obj == null) continue;
-                        Method getM = findCacheGetMethod(obj.getClass(), rpClass);
-                        if (getM != null) {
-                            mcGetSkinCacheMethod = m;
-                            skinCacheRef = obj;
-                            cacheGetMethod = getM;
-                            break;
-                        }
-                    } catch (Exception ignored) {}
-                }
-            }
-
-            // Step 4: If cache found, discover entry.getTextures() and texture() methods
-            if (cacheGetMethod != null) {
-                Class<?> entryClass = cacheGetMethod.getReturnType();
-                // Find getTextures() or similar
-                for (Method m : entryClass.getMethods()) {
-                    if (m.getParameterCount() == 0 && !m.getReturnType().equals(void.class) &&
-                        !m.getReturnType().isPrimitive()) {
-                        entryGetTexturesMethod = m;
-                        break;
-                    }
-                }
-            }
-
-            // Step 5: Find PlayerSkinDrawer (or Official equivalent)
-            for (String className : new String[]{
-                "net.minecraft.client.gui.PlayerSkinDrawer",
-                "net.minecraft.client.gui.PlayerFaceRenderer",
-                "net.minecraft.client.gui.components.PlayerSkinDrawer",
-                "net.minecraft.client.gui.components.PlayerFaceRenderer",
-                "net.minecraft.client.gui.components.player.PlayerSkinDrawer",
-                "net.minecraft.client.gui.components.player.PlayerFaceRenderer"
-            }) {
-                try {
-                    Class<?> cls = Class.forName(className);
-                    for (Method m : cls.getDeclaredMethods()) {
-                        if (m.getName().equals("draw")) {
-                            drawerClass = cls;
-                            drawerDrawMethod = m;
-                            m.setAccessible(true);
-                            break;
-                        }
-                    }
-                    if (drawerDrawMethod != null) break;
-                } catch (ClassNotFoundException ignored) {}
-            }
-
-            // Step 6: Find skinTextures.texture() → Identifier (for manual face blit fallback)
-            if (entryGetTexturesMethod != null) {
-                Class<?> texturesClass = entryGetTexturesMethod.getReturnType();
-                for (Method m : texturesClass.getMethods()) {
-                    if (m.getParameterCount() == 0 && m.getReturnType() == Identifier.class) {
-                        skinTexturesTextureMethod = m;
-                        break;
-                    }
-                }
-            }
-
         } catch (Exception e) {
-            // Silently fail - will fall back to head item rendering
+            System.out.println("[ShopMod] Default skin discovery error: " + e.getMessage());
         }
     }
 
-    /**
-     * Find a method on a class that accepts ResolvableProfile as parameter.
-     * This identifies the skin cache's "get(profile)" method.
-     */
-    private static Method findCacheGetMethod(Class<?> clazz, Class<?> rpClass) {
-        for (Method m : clazz.getMethods()) {
-            if (m.getParameterCount() == 1 && m.getParameterTypes()[0].isAssignableFrom(rpClass)) {
-                return m;
+    private void drawDefaultSkin(GuiGraphics ctx, UUID uuid, String name, int x, int y) {
+        try {
+            if (!defaultSkinResolved) resolveDefaultSkinMethod();
+
+            if (defaultSkinMethod != null) {
+                PlayerSkin skin;
+                if (defaultSkinMethod.getParameterCount() == 1) {
+                    skin = (PlayerSkin) defaultSkinMethod.invoke(null, uuid != null ? uuid : new UUID(0, 0));
+                } else {
+                    skin = (PlayerSkin) defaultSkinMethod.invoke(null);
+                }
+                if (skin != null) {
+                    PlayerFaceRenderer.draw(ctx, skin, x, y, FACE_SIZE);
+                    return;
+                }
             }
+            ctx.fill(x, y, x + FACE_SIZE, y + FACE_SIZE, 0xFF6B4226);
+        } catch (Exception e) {
+            System.out.println("[ShopMod] Default skin draw error: " + e.getMessage());
+            ctx.fill(x, y, x + FACE_SIZE, y + FACE_SIZE, 0xFF6B4226);
         }
-        return null;
     }
 
-    // ==================== Profile & Skin Retrieval ====================
+    // ==================== Skin Provider Discovery (Two-Phase) ====================
 
-    /**
-     * Create a ResolvableProfile from a GameProfile using reflection.
-     * Mirrors Yarn's ProfileComponent.ofStatic(profile).
-     */
-    private static Object createResolvableProfile(UUID uuid, String name) {
+    private static synchronized void resolveSkinMethods() {
+        if (skinMethodsResolved) return;
+        skinMethodsResolved = true;
         try {
-            GameProfile profile = new GameProfile(uuid, name != null ? name : "");
+            Object mc = Minecraft.getInstance();
+            Method uuidGetter = null, uuidCacheM = null, uuidSkinM = null;
+            Method rpGetter = null, rpCacheM = null, rpSkinM = null;
 
-            // Try static factory method first (e.g., ResolvableProfile.of(profile))
-            if (createProfileMethod != null) {
-                return createProfileMethod.invoke(null, profile);
+            for (Method getter : mc.getClass().getMethods()) {
+                if (getter.getParameterCount() != 0) continue;
+                Class<?> rt = getter.getReturnType();
+                if (rt.equals(void.class) || rt.isPrimitive() || rt.equals(String.class)) continue;
+                for (Method m : rt.getMethods()) {
+                    if (m.getParameterCount() != 1 || m.getReturnType().equals(void.class)) continue;
+                    boolean isUUID = (m.getParameterTypes()[0] == UUID.class);
+                    boolean isRP = (!isUUID && m.getParameterTypes()[0].isAssignableFrom(ResolvableProfile.class));
+                    if (!isUUID && !isRP) continue;
+                    Method sm = findSkinGetter(m.getReturnType());
+                    if (sm == null) continue;
+                    if (isUUID && uuidGetter == null) { uuidGetter = getter; uuidCacheM = m; uuidSkinM = sm; }
+                    if (isRP && rpGetter == null) { rpGetter = getter; rpCacheM = m; rpSkinM = sm; }
+                }
+                if (uuidGetter != null && rpGetter != null) break;
             }
 
-            // Try constructor: ResolvableProfile.Static(Either.left(profile), null)
-            if (profileStaticCtor != null) {
-                Class<?> eitherClass = Class.forName("com.mojang.datafixers.util.Either");
-                Object eitherLeft = eitherClass.getDeclaredMethod("left", Object.class).invoke(null, profile);
-                Class<?>[] pt = profileStaticCtor.getParameterTypes();
-                if (pt.length == 1) return profileStaticCtor.newInstance(eitherLeft);
-                if (pt.length == 2) return profileStaticCtor.newInstance(eitherLeft, null);
-            }
-        } catch (Exception ignored) {}
-        return null;
-    }
-
-    /**
-     * Get skin textures for a player. Mirrors Yarn's getSkinTextures().
-     */
-    private static Object getSkinTextures(UUID uuid, String name) {
-        try {
-            Object rp = createResolvableProfile(uuid, name);
-            if (rp == null || cacheGetMethod == null || skinCacheRef == null) return null;
-
-            Object entry = cacheGetMethod.invoke(skinCacheRef, rp);
-            if (entry == null || entryGetTexturesMethod == null) return null;
-
-            return entryGetTexturesMethod.invoke(entry);
-        } catch (Exception ignored) {}
-        return null;
-    }
-
-    // ==================== Face Drawing ====================
-
-    /**
-     * Draw player face from skin textures.
-     * Tries: PlayerSkinDrawer.draw() → manual blit from skin texture → fallback
-     */
-    private boolean drawFaceFromSkin(GuiGraphics ctx, UUID uuid, String name, int x, int y) {
-        if (!skinSystemReady) initSkinSystem();
-
-        Object skinTextures = getSkinTextures(uuid, name);
-
-        if (skinTextures != null) {
-            // Approach 1: Use PlayerSkinDrawer.draw(ctx, textures, x, y, size)
-            if (drawerDrawMethod != null) {
+            if (uuidGetter != null) {
                 try {
-                    drawerDrawMethod.invoke(null, ctx, skinTextures, x, y, FACE_SIZE);
-                    return true;
+                    Object obj = uuidGetter.invoke(mc);
+                    if (obj != null) { cacheGetByUUID = uuidCacheM; entrySkinMethod = uuidSkinM; skinCacheRef = obj; cacheGetterMethod = uuidGetter; }
                 } catch (Exception ignored) {}
             }
-
-            // Approach 2: Extract texture Identifier from SkinTextures and blit face manually
-            if (skinTexturesTextureMethod != null) {
+            if (cacheGetByUUID == null && rpGetter != null) {
                 try {
-                    Identifier texture = (Identifier) skinTexturesTextureMethod.invoke(skinTextures);
-                    if (texture != null) {
-                        return blitFaceFromTexture(ctx, texture, x, y);
+                    Object obj = rpGetter.invoke(mc);
+                    if (obj != null) { cacheGetByRP = rpCacheM; entrySkinMethod = rpSkinM; skinCacheRef = obj; cacheGetterMethod = rpGetter; }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            System.out.println("[ShopMod Skin] Init error: " + e.getMessage());
+        }
+    }
+
+    private static Method findSkinGetter(Class<?> entryClass) {
+        for (Method m : entryClass.getMethods()) {
+            if (m.getParameterCount() == 0 && m.getReturnType() == PlayerSkin.class) return m;
+        }
+        return null;
+    }
+
+    // ==================== Skin Texture Extraction ====================
+
+    /**
+     * Extracts texture ResourceLocation string and model type from PlayerSkin.
+     * Uses only toString() pattern matching - NO Class.forName().
+     */
+    private static String[] extractSkinData(PlayerSkin skin) {
+        if (skin == null) return null;
+        String textureStr = null;
+        String modelStr = "WIDE";
+        try {
+            for (Method m : skin.getClass().getMethods()) {
+                if (m.getParameterCount() != 0) continue;
+                String mName = m.getName();
+                if (mName.equals("hashCode") || mName.equals("equals") || mName.equals("toString")
+                    || mName.equals("getClass") || mName.equals("notify") || mName.equals("notifyAll") || mName.equals("wait"))
+                    continue;
+                try {
+                    Object val = m.invoke(skin);
+                    if (val == null || val == skin) continue;
+                    String s = val.toString();
+                    if (s.equals(skin.toString()) || val instanceof Boolean || val instanceof String) continue;
+                    if (val.getClass().getName().contains("Optional")) continue;
+
+                    if ("WIDE".equals(s) || "SLIM".equals(s)) { modelStr = s; continue; }
+
+                    String sLow = s.toLowerCase();
+                    if (sLow.contains("cape") || sLow.contains("elytra")) continue;
+
+                    // Case 1: Wrapper with texturePath=
+                    if (s.contains("texturePath=")) {
+                        int idx = s.indexOf("texturePath=") + "texturePath=".length();
+                        int end = s.indexOf(",", idx);
+                        if (end == -1) end = s.indexOf("]", idx);
+                        if (end == -1) end = s.length();
+                        String extracted = s.substring(idx, end).trim();
+                        if (extracted.contains(":") && !extracted.contains("capes") && !extracted.contains("elytra")) {
+                            textureStr = extracted;
+                        }
+                        continue;
+                    }
+
+                    // Case 2: URL (skip)
+                    if (s.startsWith("http://") || s.startsWith("https://")) continue;
+
+                    // Case 3: Direct ResourceLocation: "namespace:path"
+                    if (s.contains(":") && s.contains("/") && !s.contains("[") && !s.contains("class_")
+                        && !s.contains("capes") && !s.contains("elytra") && s.length() < 300) {
+                        textureStr = s;
+                        continue;
                     }
                 } catch (Exception ignored) {}
             }
+        } catch (Exception ignored) {}
+        return textureStr != null ? new String[]{textureStr, modelStr} : null;
+    }
 
-            // Approach 3: Search for any method on skinTextures that returns an Identifier
+    // ==================== Disk Persistence ====================
+
+    /**
+     * Saves skin to disk as .skin text file.
+     * Reads from SKIN_CACHE directly - NO getConnection() dependency!
+     * Can be called from any thread.
+     */
+    private static void saveSkinToDisk(UUID uuid, String name) {
+        if (diskSaved.contains(uuid)) return;
+        try {
+            PlayerSkin skin = SKIN_CACHE.get(uuid);
+            if (skin == null) {
+                System.out.println("[ShopMod] saveSkinToDisk: no skin in cache for " + name);
+                return;
+            }
+            String[] data = extractSkinData(skin);
+            if (data == null) {
+                System.out.println("[ShopMod] saveSkinToDisk: could not extract data for " + name);
+                return;
+            }
+            Files.createDirectories(SKIN_DIR);
+            Path file = SKIN_DIR.resolve(uuid.toString() + ".skin");
+            Path tmp = SKIN_DIR.resolve(uuid.toString() + ".skin.tmp");
+            Files.writeString(tmp, data[0] + "\n" + data[1] + "\n", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            diskSaved.add(uuid);
+            System.out.println("[ShopMod] saveSkinToDisk: saved " + name + " -> " + file);
+        } catch (Exception e) {
+            System.out.println("[ShopMod] saveSkinToDisk error for " + name + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Loads skin from .skin text file and reconstructs PlayerSkin via reflection.
+     */
+    private static PlayerSkin loadSkinFromDisk(UUID uuid) {
+        if (diskLoaded.contains(uuid)) return null;
+        diskLoaded.add(uuid);
+        Path file = SKIN_DIR.resolve(uuid.toString() + ".skin");
+        if (!Files.exists(file)) return null;
+        try {
+            List<String> lines = Files.readAllLines(file);
+            if (lines.isEmpty() || lines.get(0).trim().isEmpty()) return null;
+            String textureLine = lines.get(0).trim();
+            String modelType = lines.size() > 1 && "SLIM".equals(lines.get(1).trim()) ? "SLIM" : "WIDE";
+
+            if (textureLine.contains("[") || textureLine.contains(",") || textureLine.contains("class_")
+                || textureLine.contains("capes") || textureLine.contains("elytra")) {
+                Files.deleteIfExists(file);
+                return null;
+            }
+
+            String namespace = "minecraft", path = textureLine;
+            int colonIdx = textureLine.indexOf(':');
+            if (colonIdx > 0) { namespace = textureLine.substring(0, colonIdx); path = textureLine.substring(colonIdx + 1); }
+
+            Object resourceLocation;
             try {
-                for (Method m : skinTextures.getClass().getMethods()) {
-                    if (m.getParameterCount() == 0 && m.getReturnType() == Identifier.class) {
-                        Identifier texture = (Identifier) m.invoke(skinTextures);
-                        if (texture != null) {
-                            skinTexturesTextureMethod = m; // cache for next time
-                            return blitFaceFromTexture(ctx, texture, x, y);
-                        }
+                Class<?> rlClass = Class.forName("net.minecraft.class_2960");
+                resourceLocation = rlClass.getConstructor(String.class, String.class).newInstance(namespace, path);
+            } catch (ClassNotFoundException e) {
+                Class<?> rlClass = Class.forName("net.minecraft.resources.ResourceLocation");
+                resourceLocation = rlClass.getConstructor(String.class, String.class).newInstance(namespace, path);
+            }
+
+            Object modelEnum;
+            try {
+                Class<?> modelClass = Class.forName("net.minecraft.class_5605$class_5606");
+                modelEnum = Enum.valueOf((Class<Enum>) modelClass, modelType);
+            } catch (ClassNotFoundException e) {
+                Class<?> modelClass = Class.forName("net.minecraft.world.entity.player.PlayerSkin$Model");
+                modelEnum = Enum.valueOf((Class<Enum>) modelClass, modelType);
+            }
+
+            Constructor<?> skinCtor = PlayerSkin.class.getDeclaredConstructors()[0];
+            skinCtor.setAccessible(true);
+            PlayerSkin ps = (PlayerSkin) skinCtor.newInstance(resourceLocation, modelEnum, null);
+            System.out.println("[ShopMod] loadSkinFromDisk: loaded " + textureLine + " model=" + modelType + " for " + uuid);
+            return ps;
+        } catch (Exception e) {
+            System.out.println("[ShopMod] loadSkinFromDisk error: " + e.getMessage());
+            try { Files.deleteIfExists(file); } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    // ==================== Main Skin Loading ====================
+
+    private static PlayerSkin getPlayerSkin(UUID uuid, String name) {
+        if (!skinMethodsResolved) resolveSkinMethods();
+        if (uuid == null) return null;
+
+        PlayerSkin cached = SKIN_CACHE.get(uuid);
+        if (cached != null) return cached;
+
+        if (cacheGetByUUID != null && entrySkinMethod != null && skinCacheRef != null) {
+            try {
+                Object entry = cacheGetByUUID.invoke(skinCacheRef, uuid);
+                if (entry != null) {
+                    Object skin = entrySkinMethod.invoke(entry);
+                    if (skin instanceof PlayerSkin ps) {
+                        SKIN_CACHE.put(uuid, ps);
+                        saveSkinToDisk(uuid, name);
+                        return ps;
                     }
                 }
             } catch (Exception ignored) {}
         }
 
-        // Approach 4: Try DefaultSkinHelper fallback
-        if (defaultSkinHelperMethod != null) {
-            try {
-                Object defaultTextures = defaultSkinHelperMethod.invoke(null, uuid);
-                if (defaultTextures != null) {
-                    if (drawerDrawMethod != null) {
+        try {
+            Object player = Minecraft.getInstance().player;
+            if (player != null) {
+                Method getUUID = player.getClass().getMethod("getUUID");
+                if (getUUID.invoke(player).equals(uuid)) {
+                    for (Method m : player.getClass().getMethods()) {
+                        if (m.getParameterCount() == 0 && m.getReturnType() == PlayerSkin.class) {
+                            Object skin = m.invoke(player);
+                            if (skin instanceof PlayerSkin ps) {
+                                SKIN_CACHE.put(uuid, ps);
+                                saveSkinToDisk(uuid, name);
+                                return ps;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            Object mc = Minecraft.getInstance();
+            Method getConnection = mc.getClass().getMethod("getConnection");
+            Object connection = getConnection.invoke(mc);
+            if (connection != null) {
+                for (Method m : connection.getClass().getMethods()) {
+                    if (m.getParameterCount() == 1 && m.getParameterTypes()[0] == UUID.class) {
                         try {
-                            drawerDrawMethod.invoke(null, ctx, defaultTextures, x, y, FACE_SIZE);
-                            return true;
+                            Object playerInfo = m.invoke(connection, uuid);
+                            if (playerInfo != null) {
+                                for (Method pm : playerInfo.getClass().getMethods()) {
+                                    if (pm.getParameterCount() == 0 && pm.getReturnType() == PlayerSkin.class) {
+                                        Object skin = pm.invoke(playerInfo);
+                                        if (skin instanceof PlayerSkin ps) {
+                                            SKIN_CACHE.put(uuid, ps);
+                                            saveSkinToDisk(uuid, name);
+                                            return ps;
+                                        }
+                                    }
+                                }
+                                for (Method pm : playerInfo.getClass().getMethods()) {
+                                    if (pm.getParameterCount() == 0 && pm.getReturnType() == GameProfile.class) {
+                                        GameProfile gp = (GameProfile) pm.invoke(playerInfo);
+                                        if (gp != null && skinCacheRef != null) {
+                                            PlayerSkin ps = skinFromProfile(gp);
+                                            if (ps != null) {
+                                                SKIN_CACHE.put(uuid, ps);
+                                                saveSkinToDisk(uuid, name);
+                                                return ps;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         } catch (Exception ignored) {}
                     }
-                    for (Method m : defaultTextures.getClass().getMethods()) {
-                        if (m.getParameterCount() == 0 && m.getReturnType() == Identifier.class) {
-                            Identifier texture = (Identifier) m.invoke(defaultTextures);
-                            if (texture != null) return blitFaceFromTexture(ctx, texture, x, y);
-                        }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        PlayerSkin diskSkin = loadSkinFromDisk(uuid);
+        if (diskSkin != null) {
+            SKIN_CACHE.put(uuid, diskSkin);
+            return diskSkin;
+        }
+
+        return null;
+    }
+
+    private static PlayerSkin skinFromProfile(GameProfile profile) {
+        try {
+            if (cacheGetByRP != null && entrySkinMethod != null) {
+                for (Method m : ResolvableProfile.class.getMethods()) {
+                    if (Modifier.isStatic(m.getModifiers()) && m.getParameterCount() == 1 &&
+                        m.getParameterTypes()[0].isAssignableFrom(GameProfile.class) && m.getReturnType() == ResolvableProfile.class) {
+                        Object rp = m.invoke(null, profile);
+                        if (rp != null) { Object entry = cacheGetByRP.invoke(skinCacheRef, rp); if (entry != null) { Object skin = entrySkinMethod.invoke(entry); if (skin instanceof PlayerSkin ps) return ps; } }
                     }
                 }
-            } catch (Exception ignored) {}
-        }
-
-        return false;
-    }
-
-    /**
-     * Blit the face portion (8x8 UV at 8,8 on a 64x64 skin texture) scaled to FACE_SIZE.
-     */
-    private static boolean blitFaceFromTexture(GuiGraphics ctx, Identifier texture, int x, int y) {
-        try {
-            // Try the scaled blit (8-arg or 10-arg with dest dimensions)
-            java.lang.reflect.Method blit10 = ctx.getClass().getMethod("blit",
-                Identifier.class, int.class, int.class, int.class, int.class,
-                float.class, float.class, int.class, int.class, int.class);
-            blit10.invoke(ctx, texture, x, y, FACE_SIZE, FACE_SIZE, 8, 8, 8, 8, 64, 64);
-            return true;
-        } catch (NoSuchMethodException e1) {
-            try {
-                // Standard 8-arg blit: blit(texture, x, y, u, v, w, h, texW, texH)
-                int pad = (FACE_SIZE - 8) / 2;
-                ctx.blit(texture, x + pad, y + pad, 8, 8, 8, 8, 64, 64);
-                return true;
-            } catch (Exception e2) {
-                return false;
             }
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    // ==================== Head item fallback (when skin system unavailable) ====================
-
-    private static final Map<UUID, ItemStack> HEAD_CACHE = new HashMap<>();
-
-    private static ItemStack createHeadViaNbtCodec(UUID uuid, String name) {
-        try {
-            CompoundTag headNbt = new CompoundTag();
-            headNbt.putString("id", "minecraft:player_head");
-            headNbt.putInt("count", 1);
-            CompoundTag components = new CompoundTag();
-            CompoundTag profileTag = new CompoundTag();
-            profileTag.putString("name", name != null ? name : "");
-            long msb = uuid.getMostSignificantBits(), lsb = uuid.getLeastSignificantBits();
-            ListTag idList = new ListTag();
-            idList.add(IntTag.valueOf((int) (msb >> 32))); idList.add(IntTag.valueOf((int) msb));
-            idList.add(IntTag.valueOf((int) (lsb >> 32))); idList.add(IntTag.valueOf((int) lsb));
-            profileTag.put("id", idList);
-            components.put("minecraft:profile", profileTag);
-            headNbt.put("components", components);
-            return ItemStack.CODEC.parse(NbtOps.INSTANCE, headNbt).result().orElse(new ItemStack(Items.PLAYER_HEAD));
+            if (skinCacheRef != null) {
+                for (Method m : skinCacheRef.getClass().getMethods()) {
+                    if (m.getParameterCount() == 1 && m.getParameterTypes()[0].isAssignableFrom(GameProfile.class) && !m.getReturnType().equals(void.class)) {
+                        try {
+                            Object result = m.invoke(skinCacheRef, profile);
+                            if (result instanceof PlayerSkin ps) return ps;
+                            if (result != null) { Method sm = findSkinGetter(result.getClass()); if (sm != null) { Object skin = sm.invoke(result); if (skin instanceof PlayerSkin ps) return ps; } }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
         } catch (Exception ignored) {}
         return null;
     }
 
-    private static ItemStack buildPlayerHead(UUID uuid, String name) {
-        ItemStack h = createHeadViaNbtCodec(uuid, name);
-        return h != null ? h : new ItemStack(Items.PLAYER_HEAD);
-    }
+    // ==================== Avatar Drawing ====================
 
-    // ==================== Main Avatar Drawing ====================
-
-    /**
-     * Draw player avatar: tries skin face → head item fallback.
-     */
     private void drawPlayerAvatar(GuiGraphics ctx, UUID uuid, String name, int x, int y) {
-        // Dark background
-        ctx.fill(x, y, x + FACE_SIZE, y + FACE_SIZE, 0xFF333333);
-        drawBorder(ctx, x, y, FACE_SIZE, FACE_SIZE, 0xFF555555);
-
-        if (uuid == null) {
-            // No UUID - show first letter
-            String initial = (name != null && !name.isEmpty()) ? name.substring(0, 1).toUpperCase() : "?";
-            ctx.drawCenteredString(font, Component.literal(initial), x + FACE_SIZE / 2, y + 5, 0xFFFFFFFF);
-            return;
+        if (uuid != null) {
+            PlayerSkin cached = SKIN_CACHE.get(uuid);
+            if (cached != null) {
+                try { PlayerFaceRenderer.draw(ctx, cached, x, y, FACE_SIZE); return; }
+                catch (Exception ignored) {}
+            }
         }
-
-        // Try 2D face from skin textures
-        if (drawFaceFromSkin(ctx, uuid, name, x + 1, y + 1)) return;
-
-        // Fallback: render head item
-        ItemStack head = HEAD_CACHE.computeIfAbsent(uuid, u -> buildPlayerHead(u, name));
-        ctx.renderItem(head, x + 1, y + 1);
+        drawDefaultSkin(ctx, uuid, name, x, y);
     }
 
-    // ==================== Screen methods ====================
+    // ==================== Screen Methods ====================
 
     @Override
     protected void init() {
         int px = (width - W) / 2, py = (height - H) / 2;
         if (selectedShop >= 0 && selectedShop < getTotalEntries())
-            addRenderableWidget(Button.builder(Component.literal("Open"), btn -> openSelected()).bounds(px + W / 2 - 85, py + H - 25, 70, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose()).bounds(px + W / 2 + 15, py + H - 25, 70, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("Open"), btn -> openSelected())
+                .bounds(px + W / 2 - 85, py + H - 25, 70, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose())
+            .bounds(px + W / 2 + 15, py + H - 25, 70, 20).build());
     }
 
     private int getTotalEntries() { return playerHasShop ? shops.size() : shops.size() + 1; }
@@ -506,6 +545,38 @@ public class ShopListScreen extends Screen {
         }
         ctx.drawCenteredString(font, Component.literal(shops.size() + (shops.size() == 1 ? " Shop" : " Shops")), px + W / 2, py + H - 48, 0xFFAAAAAA);
         super.render(ctx, mx, my, delta);
+
+        // After first render: load skins in background thread
+        if (resolvePending) {
+            resolvePending = false;
+            final List<ShopEntry> shopCopy = new ArrayList<>(shops);
+            new Thread("ShopMod-SkinLoader") {
+                @Override
+                public void run() {
+                    try {
+                        resolveDefaultSkinMethod();
+                        System.out.println("[ShopMod] BG: Resolving skin methods...");
+                        resolveSkinMethods();
+                        System.out.println("[ShopMod] BG: Pre-loading " + shopCopy.size() + " shop skins...");
+                        for (ShopEntry entry : shopCopy) {
+                            if (entry.uuid != null && !SKIN_CACHE.containsKey(entry.uuid)) {
+                                try {
+                                    PlayerSkin skin = getPlayerSkin(entry.uuid, entry.ownerName);
+                                    if (skin != null) {
+                                        System.out.println("[ShopMod] BG: Loaded skin for " + entry.ownerName);
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println("[ShopMod] BG: Failed skin for " + entry.ownerName + ": " + e.getMessage());
+                                }
+                            }
+                        }
+                        System.out.println("[ShopMod] BG: All skin loading complete");
+                    } catch (Exception e) {
+                        System.out.println("[ShopMod] BG error: " + e.getMessage());
+                    }
+                }
+            }.start();
+        }
     }
 
     @Override
@@ -535,5 +606,6 @@ public class ShopListScreen extends Screen {
         return true;
     }
 
-    @Override public boolean isPauseScreen() { return false; }
+    @Override
+    public boolean isPauseScreen() { return false; }
 }

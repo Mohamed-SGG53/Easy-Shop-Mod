@@ -56,7 +56,6 @@ public final class ShopCommand {
                 String playerName          = player.getName().getString();
                 ShopManager mgr            = ShopManager.get(server);
 
-                // Check if player already has a shop
                 if (mgr.hasNpc(playerName)) {
                     UUID npcId = mgr.getNpcId(playerName);
                     ServerLevel sw = source.getLevel();
@@ -74,9 +73,7 @@ public final class ShopCommand {
                     }
                 }
 
-                // Spawn a regular Villager using EntityType.spawn()
                 ServerLevel world = source.getLevel();
-                // In MC 1.21.11, use relative(Direction) instead of offset(Direction)
                 Villager npc = EntityType.VILLAGER.spawn(
                     world,
                     player.blockPosition().relative(player.getDirection()),
@@ -89,7 +86,6 @@ public final class ShopCommand {
                     npc.setNoAi(true);
                     npc.setInvulnerable(true);
 
-                    // Make NPC look at the player
                     double dx = player.getX() - npc.getX();
                     double dz = player.getZ() - npc.getZ();
                     float yaw = (float) (Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
@@ -154,6 +150,7 @@ public final class ShopCommand {
                     player.displayClientMessage(Component.literal(I18n.get("msg.shop_closed")), false);
                     return 1;
                 } else {
+                    // NPC is already dead or gone — only remove npcId, keep shop data intact
                     mgr.removeNpc(playerName);
                     mgr.setDirty();
                     player.displayClientMessage(Component.literal(I18n.get("msg.shop_npc_not_found")), false);
@@ -175,7 +172,6 @@ public final class ShopCommand {
 
                 List<ModPackets.ShopEntryInfo> shopEntries = new ArrayList<>();
 
-                // First: player's own shop (if they have one)
                 if (playerHasShop) {
                     ShopData ownData = mgr.get(playerName);
                     UUID ownUuid = resolveOwnerUuid(server, playerName, ownData);
@@ -187,7 +183,6 @@ public final class ShopCommand {
                     ));
                 }
 
-                // Then: all other shops
                 for (String owner : owners) {
                     if (owner.equals(playerName)) continue;
                     ShopData d = mgr.get(owner);
@@ -200,7 +195,6 @@ public final class ShopCommand {
                     ));
                 }
 
-                // Send the shop list packet to client
                 net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
                     new ModPackets.OpenShopsListPayload(
                         shopEntries,
@@ -214,21 +208,13 @@ public final class ShopCommand {
             }));
     }
 
-    /**
-     * Resolve the UUID of a shop owner.
-     * Priority: ShopData stored UUID -> Online player -> null
-     */
     private static UUID resolveOwnerUuid(MinecraftServer server, String ownerName, ShopData shopData) {
-        // 1. Try from ShopData
         if (shopData != null && shopData.getOwnerUuid() != null) {
             return shopData.getOwnerUuid();
         }
-
-        // 2. Try from online players (if server is available)
         if (server != null) {
             ServerPlayer owner = server.getPlayerList().getPlayer(ownerName);
             if (owner != null) {
-                // Update the shop data with the UUID for future use
                 if (shopData != null) {
                     shopData.setOwnerUuid(owner.getUUID());
                     ShopManager.get(server).setDirty();
@@ -236,7 +222,6 @@ public final class ShopCommand {
                 return owner.getUUID();
             }
         }
-
         return null;
     }
 }

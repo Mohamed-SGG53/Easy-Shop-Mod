@@ -8,7 +8,6 @@ public class I18n {
     private static final Map<String, String> EN = new HashMap<>();
 
     static {
-        // English
         EN.put("shop.title", "%s - Shop Manager");
         EN.put("shop.storage", "Storage");
         EN.put("shop.set_price", "Set Price");
@@ -25,9 +24,10 @@ public class I18n {
 
         EN.put("msg.shop_created", "\u00a7aShop created: \u00a7e%s's Shop \u00a7a\u00a7r");
         EN.put("msg.shop_exists", "\u00a7cYou already have a shop! Use \u00a7e/close_shop \u00a7cto remove it first.");
-        EN.put("msg.shop_closed", "\u00a7aShop closed successfully! \u00a7c(Your items are saved)");
-        EN.put("msg.shop_not_found", "\u00a7cYou don't have a shop!");
-        EN.put("msg.shop_npc_not_found", "\u00a7eShop NPC was not found, data cleared.");
+        EN.put("msg.shop_closed", "\u00a7aShop closed successfully! \u00a77(Your items are saved)");
+        EN.put("msg.shop_not_found", "\u00a7cYour shop NPC was not found. Use \u00a7a/create_shop \u00a7cto create it again. \u00a77Your offers are still saved.");
+        EN.put("msg.shop_npc_not_found", "\u00a7cYou don't have a shop!");
+        EN.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7e%s\u00a7c's Shop was destroyed by \u00a7e%s\u00a7c! The offers are still saved.");
         EN.put("msg.shop_not_exists", "\u00a7cShop \u00a7e%s \u00a7cnot found!");
         EN.put("msg.no_shops", "\u00a77No shops yet.");
         EN.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Shop List \u2500\u2500\u2500\u2500\u2500\u2500\u2500");

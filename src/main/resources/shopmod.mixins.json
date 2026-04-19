@@ -6,7 +6,8 @@
   "mixins": [
     "VillagerEntityMixin",
     "EntityInvulnerableMixin",
-    "VillagerTickMixin"
+    "VillagerTickMixin",
+    "VillagerDeathMixin"
   ],
   "injectors": {
     "defaultRequire": 1

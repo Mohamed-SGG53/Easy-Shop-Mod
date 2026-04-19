@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 
@@ -16,7 +17,9 @@ public class EnchantedBookAmountScreen extends Screen {
 
     private final String shopName;
     private final ItemStack bookTemplate;
-    private static final int W=240, H=120;
+    private EditBox amountField;
+    private static final int W=240, H=160;
+    private static final int MAX_AMOUNT = 64;
 
     public EnchantedBookAmountScreen(String shopName, ItemStack bookTemplate) {
         super(Component.literal("Set Price - " + shopName));
@@ -32,7 +35,13 @@ public class EnchantedBookAmountScreen extends Screen {
     @Override
     protected void init() {
         int px=(width-W)/2, py=(height-H)/2;
-        addRenderableWidget(Button.builder(Component.literal("Confirm (x1)"), btn->confirm()).bounds(px+W/2-60,py+H-30,120,20).build());
+        amountField=new EditBox(font, px+W/2-40, py+84, 80, 20, Component.literal("1"));
+        amountField.setValue("1"); amountField.setMaxLength(4);
+        addRenderableWidget(amountField);
+        int[][] qp={{1,0},{16,1},{32,2},{64,3}};
+        for (int[] q:qp) { final int qty=q[0], slot=q[1];
+            addRenderableWidget(Button.builder(Component.literal("x"+qty), btn->amountField.setValue(""+qty)).bounds(px+14+slot*52,py+108,48,18).build()); }
+        addRenderableWidget(Button.builder(Component.literal("Confirm"), btn->confirm()).bounds(px+W/2-60,py+H-30,120,20).build());
     }
 
     @Override
@@ -45,21 +54,24 @@ public class EnchantedBookAmountScreen extends Screen {
         ctx.drawCenteredString(font, Component.literal("Set Price - " + shopName), px+W/2, py+6, 0xFFFFFFFF);
 
         // Draw enchanted book icon
-        ctx.fill(px+W/2-12,py+28,px+W/2+12,py+52,0xFF444444);
-        drawBorder(ctx,px+W/2-12,py+28,24,24,0xFFAAAAAA);
-        ctx.renderItem(bookTemplate, px+W/2-8, py+32);
+        ctx.fill(px+W/2-12,py+30,px+W/2+12,py+54,0xFF444444);
+        drawBorder(ctx,px+W/2-12,py+30,24,24,0xFFAAAAAA);
+        ctx.renderItem(bookTemplate, px+W/2-8, py+34);
 
         // Draw book name
-        ctx.drawCenteredString(font, bookTemplate.getHoverName(), px+W/2, py+58, 0xFFFFFFFF);
-        ctx.drawCenteredString(font, Component.literal("Quantity: x1"), px+W/2, py+72, 0xAAAAAA);
+        ctx.drawCenteredString(font, bookTemplate.getHoverName(), px+W/2, py+60, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal("Enter quantity:"), px+W/2, py+72, 0xAAAAAA);
 
         super.render(ctx, mx, my, delta);
     }
 
     private void confirm() {
-        // Enchanted books and weapons always x1 as price
+        int amount;
+        try { amount=Integer.parseInt(amountField.getValue().trim()); }
+        catch (NumberFormatException e) { amount=1; }
+        amount=Math.max(1, Math.min(amount, MAX_AMOUNT));
         ItemStack book = bookTemplate.copy();
-        book.setCount(1);
+        book.setCount(amount);
         ClientPacketHandler.PendingBuyHolder.buyItem = book;
         ClientPacketHandler.PendingBuyHolder.shopName = shopName;
         ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName));

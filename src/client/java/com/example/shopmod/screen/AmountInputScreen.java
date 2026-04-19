@@ -76,8 +76,7 @@ public class AmountInputScreen extends Screen {
         int amount;
         try { amount=Integer.parseInt(amountField.getValue().trim()); }
         catch (NumberFormatException e) { amount=1; }
-        amount=Math.max(1,Math.min(amount, item.getDefaultInstance().getMaxStackSize()));
-        ClientPacketHandler.PendingBuyHolder.buyItem  = new ItemStack(item, amount);
+        amount=Math.max(1,Math.min(amount, 64));        ClientPacketHandler.PendingBuyHolder.buyItem  = new ItemStack(item, amount);
         ClientPacketHandler.PendingBuyHolder.shopName = shopName;
         ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName));
         onClose();

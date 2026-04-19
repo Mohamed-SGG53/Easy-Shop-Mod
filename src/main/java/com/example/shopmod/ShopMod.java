@@ -7,6 +7,7 @@ import com.example.shopmod.data.ShopManager;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.world.entity.EntityType;
@@ -40,7 +41,6 @@ public class ShopMod implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("ShopMod initializing...");
 
-        // Register payload types
         PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_OWNER_ID,   ModPackets.OpenOwnerPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_BUYER_ID,   ModPackets.OpenBuyerPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_PICKER_ID,  ModPackets.OpenPickerPayload.CODEC);
@@ -60,26 +60,111 @@ public class ShopMod implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(ModPackets.TAKE_STORAGE_ID,     ModPackets.TakeStoragePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.OPEN_SHOP_FROM_LIST_ID, ModPackets.OpenShopFromListPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.CREATE_SHOP_FROM_LIST_ID, ModPackets.CreateShopFromListPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ModPackets.TOGGLE_SHOP_MOVE_ID, ModPackets.ToggleShopMovePayload.CODEC);
 
         CommandRegistrationCallback.EVENT.register(ShopCommand::register);
         registerServerPackets();
+
+        // Shop NPC Follow Owner - checks every 2 seconds (40 ticks)
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTickCount() % 40 != 0) return;
+
+            ShopManager mgr = ShopManager.get(server);
+
+            for (String owner : mgr.getAllOwners()) {
+                ShopData data = mgr.get(owner);
+                if (data == null || !data.isShopMoveEnabled()) continue;
+
+                UUID npcUuid = mgr.getNpcId(owner);
+                if (npcUuid == null) continue;
+
+                ServerPlayer ownerPlayer = server.getPlayerList().getPlayer(owner);
+                if (ownerPlayer == null || !ownerPlayer.isAlive()) continue;
+
+                Villager villager = null;
+                for (ServerLevel level : server.getAllLevels()) {
+                    var e = level.getEntity(npcUuid);
+                    if (e instanceof Villager v && v.isAlive()) { villager = v; break; }
+                }
+                if (villager == null) continue;
+
+                if (!villager.level().equals(ownerPlayer.level())) {
+                    villager.setNoAi(true);
+                    continue;
+                }
+
+                double dx = ownerPlayer.getX() - villager.getX();
+                double dy = ownerPlayer.getY() - villager.getY();
+                double dz = ownerPlayer.getZ() - villager.getZ();
+                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                if (dist >= 25.0) {
+                    villager.teleportTo(
+                        ownerPlayer.getX() + 2, ownerPlayer.getY(), ownerPlayer.getZ() + 2
+                    );
+                    villager.setYRot(ownerPlayer.getYRot());
+                    villager.setXRot(0);
+                    villager.setYHeadRot(ownerPlayer.getYRot());
+                } else if (dist > 3.0) {
+                    villager.setNoAi(false);
+                    villager.getNavigation().moveTo(
+                        ownerPlayer.getX(), ownerPlayer.getY(), ownerPlayer.getZ(), 0.8
+                    );
+                } else {
+                    villager.setNoAi(true);
+                    float yaw = (float) (Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
+                    villager.setYRot(yaw);
+                    villager.setYHeadRot(yaw);
+                }
+            }
+        });
+
         LOGGER.info("ShopMod ready!");
     }
 
-    // ========================================================================
-    // Helper: resolve Item from registry identifier string
-    // In MC 1.21.11, BuiltInRegistries.ITEM.get() returns Optional<Reference<Item>>
-    // ========================================================================
-
     private static Item resolveItem(String idStr) {
         if (idStr == null || idStr.isEmpty()) return Items.AIR;
-        // Look up item by iterating the registry (avoids Identifier.parse dependency)
         for (Item item : BuiltInRegistries.ITEM) {
             if (BuiltInRegistries.ITEM.getKey(item).toString().equals(idStr)) {
                 return item;
             }
         }
         return Items.AIR;
+    }
+
+    // ========================================================================
+    // Add item to main inventory only (slots 0-35: hotbar + main)
+    // Returns true if fully added, false if not enough space
+    // ========================================================================
+    private static boolean addToMainInventory(ServerPlayer player, ItemStack stack) {
+        if (stack.isEmpty()) return true;
+
+        ItemStack remaining = stack.copy();
+
+        // First pass: stack onto existing same items (slots 0-35)
+        for (int i = 0; i < 36 && !remaining.isEmpty(); i++) {
+            ItemStack slotStack = player.getInventory().getItem(i);
+            if (!slotStack.isEmpty() && ItemStack.isSameItemSameComponents(slotStack, remaining)) {
+                int canAdd = Math.min(remaining.getCount(), slotStack.getMaxStackSize() - slotStack.getCount());
+                if (canAdd > 0) {
+                    slotStack.grow(canAdd);
+                    remaining.shrink(canAdd);
+                }
+            }
+        }
+
+        // Second pass: fill empty slots (slots 0-35)
+        if (!remaining.isEmpty()) {
+            for (int i = 0; i < 36 && !remaining.isEmpty(); i++) {
+                if (player.getInventory().getItem(i).isEmpty()) {
+                    player.getInventory().setItem(i, remaining.copy());
+                    remaining = ItemStack.EMPTY;
+                }
+            }
+        }
+
+        player.getInventory().setChanged();
+        return remaining.isEmpty();
     }
 
     private void registerServerPackets() {
@@ -107,6 +192,7 @@ public class ShopMod implements ModInitializer {
                     }
 
                     removeItems(player, sellStack.copy(), sellCnt);
+                    player.inventoryMenu.broadcastChanges();
 
                     Item buyItem = resolveItem(buyId);
                     if (buyItem == Items.AIR) return;
@@ -149,6 +235,7 @@ public class ShopMod implements ModInitializer {
                     }
 
                     removeItems(player, sellStack.copy(), needed);
+                    player.inventoryMenu.broadcastChanges();
 
                     ShopManager mgr = ShopManager.get(ctx.server());
                     mgr.getOrCreate(payload.shopName()).addTrade(sellStack, buyStack);
@@ -172,7 +259,8 @@ public class ShopMod implements ModInitializer {
                     ShopData.ShopTrade removed = data.removeTrade(index);
                     if (removed != null && !removed.sellItem.isEmpty()) {
                         ItemStack toReturn = removed.sellItem.copy();
-                        if (!player.getInventory().add(toReturn)) {
+                        // Use addToMainInventory (slots 0-35 only, no armor/offhand)
+                        if (!addToMainInventory(player, toReturn)) {
                             data.addToStorage(removed.sellItem.copy());
                             player.displayClientMessage(Component.literal(I18n.get("msg.offer_returned_storage")), false);
                         } else {
@@ -180,6 +268,7 @@ public class ShopMod implements ModInitializer {
                         }
                     }
 
+                    player.inventoryMenu.broadcastChanges();
                     mgr.setDirty();
                     syncShop(player, data);
                 });
@@ -215,7 +304,6 @@ public class ShopMod implements ModInitializer {
                     String rewardName = reward.getHoverName().getString();
                     int rewardCount = reward.getCount();
 
-                    // In MC 1.21.11, spawnAtLocation needs (ServerLevel, ItemStack)
                     ServerLevel serverLevel = (ServerLevel) player.level();
                     if (!player.getInventory().add(reward)) {
                         serverLevel.addFreshEntity(new ItemEntity(serverLevel,
@@ -223,6 +311,7 @@ public class ShopMod implements ModInitializer {
                     }
 
                     data.removeTrade(index);
+                    player.inventoryMenu.broadcastChanges();
                     mgr.setDirty();
 
                     player.displayClientMessage(Component.literal(
@@ -278,18 +367,19 @@ public class ShopMod implements ModInitializer {
                     String itemName = taken.getHoverName().getString();
                     int itemCount = taken.getCount();
 
-                    if (!player.getInventory().add(taken)) {
+                    // Use addToMainInventory (slots 0-35 only, no armor/offhand)
+                    if (!addToMainInventory(player, taken)) {
                         data.addToStorage(taken);
                         player.displayClientMessage(Component.literal(I18n.get("msg.inventory_full")), false);
                     } else {
                         player.displayClientMessage(Component.literal(I18n.get("msg.trade_item_taken", itemName, itemCount)), false);
                     }
                     mgr.setDirty();
+                    player.inventoryMenu.broadcastChanges();
                     ServerPlayNetworking.send(player, new ModPackets.OpenStoragePayload(payload.shopName(), data.toNbt()));
                 }
             }));
 
-        // Open a specific shop from the shops list GUI
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.OPEN_SHOP_FROM_LIST_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
@@ -303,7 +393,6 @@ public class ShopMod implements ModInitializer {
                 }
             }));
 
-        // Create a shop from the shops list GUI
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.CREATE_SHOP_FROM_LIST_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
@@ -316,7 +405,6 @@ public class ShopMod implements ModInitializer {
                 }
 
                 ServerLevel world = (ServerLevel) player.level();
-                // In MC 1.21.11, use relative(Direction) instead of offset(Direction)
                 Villager npc = EntityType.VILLAGER.spawn(
                     world,
                     player.blockPosition().relative(player.getDirection()),
@@ -341,13 +429,44 @@ public class ShopMod implements ModInitializer {
                     mgr.setDirty();
 
                     player.displayClientMessage(Component.literal(I18n.get("msg.shop_created", playerName)), false);
-
-                    // Refresh the shop list after creating
                     sendShopsList(player);
                 } else {
                     player.displayClientMessage(Component.literal("Failed to spawn shop NPC"), false);
                 }
             }));
+
+        ServerPlayNetworking.registerGlobalReceiver(ModPackets.TOGGLE_SHOP_MOVE_ID,
+            (payload, ctx) -> {
+                String owner = payload.shopName();
+                boolean enabled = payload.enabled();
+                ctx.server().execute(() -> {
+                    ServerPlayer player = ctx.player();
+                    if (!player.getName().getString().equals(owner)) return;
+
+                    ShopManager mgr = ShopManager.get(ctx.server());
+                    ShopData data = mgr.get(owner);
+                    if (data == null) return;
+
+                    data.setShopMoveEnabled(enabled);
+                    mgr.setDirty();
+
+                    UUID npcUuid = mgr.getNpcId(owner);
+                    if (npcUuid != null) {
+                        for (ServerLevel level : ctx.server().getAllLevels()) {
+                            var entity = level.getEntity(npcUuid);
+                            if (entity instanceof Villager villager) {
+                                villager.setNoAi(!enabled);
+                                break;
+                            }
+                        }
+                    }
+
+                    player.displayClientMessage(Component.literal(
+                        enabled ? "Shop Movement: ON" : "Shop Movement: OFF"), false);
+
+                    syncShop(player, data);
+                });
+            });
     }
 
     public static void syncShop(ServerPlayer player, ShopData data) {
@@ -359,7 +478,6 @@ public class ShopMod implements ModInitializer {
         MinecraftServer server = player.createCommandSourceStack().getServer();
         ShopManager mgr = ShopManager.get(server);
         ShopData data   = mgr.getOrCreate(owner);
-        // Auto-save UUID if missing and owner is online
         if (data.getOwnerUuid() == null) {
             ServerPlayer ownerPlayer = server.getPlayerList().getPlayer(owner);
             if (ownerPlayer != null) {
@@ -379,7 +497,6 @@ public class ShopMod implements ModInitializer {
             player.displayClientMessage(Component.literal(I18n.get("buyer.empty")), false);
             return;
         }
-        // Auto-save UUID if missing and owner is online
         if (data.getOwnerUuid() == null) {
             ServerPlayer ownerPlayer = server.getPlayerList().getPlayer(owner);
             if (ownerPlayer != null) {
@@ -391,17 +508,14 @@ public class ShopMod implements ModInitializer {
         sendShopNav(player, server, mgr);
     }
 
-    /** Send navigation data (list of all shop owners) to the client */
     private static void sendShopNav(ServerPlayer player, MinecraftServer server, ShopManager mgr) {
         String playerName = player.getName().getString();
         Set<String> owners = mgr.getAllOwners();
         List<String> orderedOwners = new ArrayList<>();
 
-        // Player's own shop first
         if (owners.contains(playerName)) {
             orderedOwners.add(playerName);
         }
-        // Then all other shops
         for (String o : owners) {
             if (!o.equals(playerName)) {
                 orderedOwners.add(o);
@@ -420,10 +534,8 @@ public class ShopMod implements ModInitializer {
 
         List<ModPackets.ShopEntryInfo> shopEntries = new ArrayList<>();
 
-        // Player's own shop first
         if (playerHasShop) {
             ShopData ownData = mgr.get(playerName);
-            // Auto-save UUID for old shops that don't have it
             if (ownData != null && ownData.getOwnerUuid() == null) {
                 ownData.setOwnerUuid(player.getUUID());
                 mgr.setDirty();
@@ -437,14 +549,12 @@ public class ShopMod implements ModInitializer {
             ));
         }
 
-        // All other shops
         for (String owner : owners) {
             if (owner.equals(playerName)) continue;
             ShopData d = mgr.get(owner);
             UUID uuid = null;
             if (d != null) {
                 uuid = d.getOwnerUuid();
-                // If UUID is missing, check if owner is online and save it
                 if (uuid == null) {
                     ServerPlayer ownerPlayer = server.getPlayerList().getPlayer(owner);
                     if (ownerPlayer != null) {
@@ -474,7 +584,6 @@ public class ShopMod implements ModInitializer {
 
     private static int countItem(ServerPlayer player, ItemStack target) {
         int c = 0;
-        // In MC 1.21.11, use getContainerSize() instead of size()
         int invSize = player.getInventory().getContainerSize();
         for (int i = 0; i < invSize; i++) {
             ItemStack s = player.getInventory().getItem(i);
@@ -485,13 +594,11 @@ public class ShopMod implements ModInitializer {
 
     private static void removeItems(ServerPlayer player, ItemStack target, int amount) {
         int remaining = amount;
-        // In MC 1.21.11, use getContainerSize() instead of size()
         int invSize = player.getInventory().getContainerSize();
         for (int i = 0; i < invSize && remaining > 0; i++) {
             ItemStack s = player.getInventory().getItem(i);
             if (ItemStack.isSameItemSameComponents(s, target)) {
                 int take = Math.min(s.getCount(), remaining);
-                // In MC 1.21.11, use shrink() instead of decrement()
                 s.shrink(take);
                 remaining -= take;
             }
