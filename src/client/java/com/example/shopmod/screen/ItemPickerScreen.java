@@ -1,5 +1,6 @@
 package com.example.shopmod.screen;
 
+import com.example.shopmod.data.I18n;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -39,15 +40,19 @@ public class ItemPickerScreen extends Screen {
         "minecraft:command_block","minecraft:chain_command_block","minecraft:repeating_command_block",
         "minecraft:command_block_minecart","minecraft:structure_block","minecraft:structure_void",
         "minecraft:barrier","minecraft:light","minecraft:jigsaw","minecraft:debug_stick",
-        "minecraft:test_block","minecraft:test_instance_block","minecraft:end_portal_frame","minecraft:bedrock"
+        "minecraft:test_block","minecraft:test_instance_block","minecraft:end_portal_frame","minecraft:bedrock",
+        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow"
     );
 
+    /**
+     * 构造函数，创建物品选择器界面
+     * @param shopName 商店名称，将显示在界面标题中
+     */
     public ItemPickerScreen(String shopName) {
-        super(Component.literal("Select Price - " + shopName));
+        super(Component.literal(I18n.get("picker.title") + " - " + shopName));
         this.shopName = shopName;
         allItems = new ArrayList<>();
         for (Item item : BuiltInRegistries.ITEM) {
-            // Use var to avoid ResourceLocation type dependency
             var itemId = BuiltInRegistries.ITEM.getKey(item);
             String itemIdStr = itemId.toString();
             if (itemIdStr.contains("spawn_egg") || EXCLUDED_ITEMS.contains(itemIdStr) || isHiddenItem(itemIdStr) || itemIdStr.equals("minecraft:enchanted_book")) continue;
@@ -75,19 +80,15 @@ public class ItemPickerScreen extends Screen {
     private void addEnchantedBooksFromRegistry() {
         if (this.minecraft == null || this.minecraft.level == null) return;
         try {
-            // Use the proper HolderLookup.RegistryLookup API
             var enchRef = this.minecraft.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 
-            // Iterate through all enchantment entries via map
             for (var mapEntry : enchRef.entrySet()) {
                 try {
                     net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment> enchKey = mapEntry.getKey();
                     Enchantment enchantment = mapEntry.getValue();
 
-                    // Extract location string (e.g., "minecraft:sharpness") from ResourceKey
                     String enchantIdStr = extractLocationString(enchKey);
 
-                    // Look up the Holder for this enchantment
                     var holderOpt = enchRef.get(enchKey);
                     if (holderOpt.isEmpty()) continue;
 
@@ -95,13 +96,10 @@ public class ItemPickerScreen extends Screen {
                     for (int level = 1; level <= maxLevel; level++) {
                         ItemStack book = new ItemStack(Items.ENCHANTED_BOOK, 1);
 
-                        // Use Holder directly with Mutable (MC 1.21.11)
                         ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
                         mutable.set(holderOpt.get(), level);
                         book.set(DataComponents.STORED_ENCHANTMENTS, mutable.toImmutable());
 
-                        // Set custom name to show enchantment and level
-                        // Build translation key from the enchantment ID string
                         int colonIdx = enchantIdStr.indexOf(':');
                         String enchTranslateKey;
                         if (colonIdx >= 0) {
@@ -155,12 +153,12 @@ public class ItemPickerScreen extends Screen {
         addEnchantedBooksFromRegistry();
         int px=(width-W)/2, py=(height-H)/2;
         searchBox=new EditBox(font, px+5, py+26, W-10, 16, Component.literal("Search"));
-        searchBox.setHint(Component.literal("Search..."));
+        searchBox.setHint(Component.literal(I18n.get("picker.search")));
         searchBox.setResponder(this::filter);
         addRenderableWidget(searchBox);
-        addRenderableWidget(Button.builder(Component.literal("<"), btn->{if(page>0)page--;}).bounds(px+4,py+H-24,30,20).build());
-        addRenderableWidget(Button.builder(Component.literal(">"), btn->{int max=(shown.size()-1)/PER_PAGE;if(page<max)page++;}).bounds(px+W-34,py+H-24,30,20).build());
-        addRenderableWidget(Button.builder(Component.literal("Back"), btn->
+        addRenderableWidget(Button.builder(Component.literal(I18n.get("shop.prev")), btn->{if(page>0)page--;}).bounds(px+4,py+H-24,30,20).build());
+        addRenderableWidget(Button.builder(Component.literal(I18n.get("shop.next")), btn->{int max=(shown.size()-1)/PER_PAGE;if(page<max)page++;}).bounds(px+W-34,py+H-24,30,20).build());
+        addRenderableWidget(Button.builder(Component.literal(I18n.get("picker.back")), btn->
             ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName))
         ).bounds(px+W/2-30,py+H-24,60,20).build());
         filter("");
@@ -173,7 +171,7 @@ public class ItemPickerScreen extends Screen {
         ctx.fill(px,py,px+W,py+H,0xE0100800);
         drawBorder(ctx,px,py,W,H,0xFF8B6914);
         ctx.fill(px,py,px+W,py+22,0xFF3D1F00);
-        ctx.drawCenteredString(font, Component.literal("Select Price - " + shopName), px+W/2, py+7, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("picker.title") + " - " + shopName), px+W/2, py+7, 0xFFFFFFFF);
 
         int gridWidth = COLS * (SLOT_SIZE + SLOT_GAP);
         int gridX = px + (W - gridWidth) / 2, gridY = py + 46;
@@ -189,7 +187,7 @@ public class ItemPickerScreen extends Screen {
             if(hov) hovered=shown.get(idx);
         }
         int total=Math.max(1,(shown.size()+PER_PAGE-1)/PER_PAGE);
-        ctx.drawCenteredString(font, Component.literal("Page "+(page+1)+"/"+total+"  |  "+shown.size()+" items"), px+W/2, py+H-38, 0xAAAAAA);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("picker.page_info", page+1, total, shown.size())), px+W/2, py+H-38, 0xAAAAAA);
         super.render(ctx, mx, my, delta);
         // Proper tooltip rendering
         if(!hovered.isEmpty()) {

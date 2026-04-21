@@ -1,5 +1,6 @@
 package com.example.shopmod.screen;
 
+import com.example.shopmod.data.I18n;
 import com.example.shopmod.network.ModPackets;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.EnvType;
@@ -70,7 +71,7 @@ public class ShopListScreen extends Screen {
     }
 
     public ShopListScreen(ModPackets.OpenShopsListPayload payload) {
-        super(Component.literal("Shops List"));
+        super(Component.literal(I18n.get("shoplist.title")));
         this.playerHasShop = payload.playerHasShop();
         this.playerName = payload.playerName();
         this.playerUuid = new UUID(payload.playerUuidMost(), payload.playerUuidLeast());
@@ -199,10 +200,6 @@ public class ShopListScreen extends Screen {
 
     // ==================== Skin Texture Extraction ====================
 
-    /**
-     * Extracts texture ResourceLocation string and model type from PlayerSkin.
-     * Uses only toString() pattern matching - NO Class.forName().
-     */
     private static String[] extractSkinData(PlayerSkin skin) {
         if (skin == null) return null;
         String textureStr = null;
@@ -226,7 +223,6 @@ public class ShopListScreen extends Screen {
                     String sLow = s.toLowerCase();
                     if (sLow.contains("cape") || sLow.contains("elytra")) continue;
 
-                    // Case 1: Wrapper with texturePath=
                     if (s.contains("texturePath=")) {
                         int idx = s.indexOf("texturePath=") + "texturePath=".length();
                         int end = s.indexOf(",", idx);
@@ -239,10 +235,8 @@ public class ShopListScreen extends Screen {
                         continue;
                     }
 
-                    // Case 2: URL (skip)
                     if (s.startsWith("http://") || s.startsWith("https://")) continue;
 
-                    // Case 3: Direct ResourceLocation: "namespace:path"
                     if (s.contains(":") && s.contains("/") && !s.contains("[") && !s.contains("class_")
                         && !s.contains("capes") && !s.contains("elytra") && s.length() < 300) {
                         textureStr = s;
@@ -256,11 +250,6 @@ public class ShopListScreen extends Screen {
 
     // ==================== Disk Persistence ====================
 
-    /**
-     * Saves skin to disk as .skin text file.
-     * Reads from SKIN_CACHE directly - NO getConnection() dependency!
-     * Can be called from any thread.
-     */
     private static void saveSkinToDisk(UUID uuid, String name) {
         if (diskSaved.contains(uuid)) return;
         try {
@@ -286,9 +275,6 @@ public class ShopListScreen extends Screen {
         }
     }
 
-    /**
-     * Loads skin from .skin text file and reconstructs PlayerSkin via reflection.
-     */
     private static PlayerSkin loadSkinFromDisk(UUID uuid) {
         if (diskLoaded.contains(uuid)) return null;
         diskLoaded.add(uuid);
@@ -382,7 +368,7 @@ public class ShopListScreen extends Screen {
             }
         } catch (Exception ignored) {}
 
-        try {
+                try {
             Object mc = Minecraft.getInstance();
             Method getConnection = mc.getClass().getMethod("getConnection");
             Object connection = getConnection.invoke(mc);
@@ -476,9 +462,9 @@ public class ShopListScreen extends Screen {
     protected void init() {
         int px = (width - W) / 2, py = (height - H) / 2;
         if (selectedShop >= 0 && selectedShop < getTotalEntries())
-            addRenderableWidget(Button.builder(Component.literal("Open"), btn -> openSelected())
+            addRenderableWidget(Button.builder(Component.literal(I18n.get("shoplist.open")), btn -> openSelected())
                 .bounds(px + W / 2 - 85, py + H - 25, 70, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose())
+        addRenderableWidget(Button.builder(Component.literal(I18n.get("shoplist.close")), btn -> onClose())
             .bounds(px + W / 2 + 15, py + H - 25, 70, 20).build());
     }
 
@@ -502,7 +488,7 @@ public class ShopListScreen extends Screen {
         ctx.fill(px, py, px + W, py + H, 0xCC000000);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 24, 0xFF553311);
-        ctx.drawCenteredString(font, Component.literal("Shops List"), px + W / 2, py + 7, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("shoplist.title")), px + W / 2, py + 7, 0xFFFFFFFF);
 
         int listX = px + 8, listY = py + 30, listW = W - 16, listH = VISIBLE_SHOPS * ROW_HEIGHT;
         ctx.fill(listX, listY, listX + listW, listY + listH, 0x88000000);
@@ -510,7 +496,7 @@ public class ShopListScreen extends Screen {
 
         int totalEntries = getTotalEntries();
         if (totalEntries == 0 && !playerHasShop) {
-            ctx.drawCenteredString(font, Component.literal("No shops yet"), px + W / 2, listY + listH / 2 - 4, 0xFFFFFFFF);
+            ctx.drawCenteredString(font, Component.literal(I18n.get("shoplist.empty")), px + W / 2, listY + listH / 2 - 4, 0xFFFFFFFF);
         } else {
             int endIdx = Math.min(scrollOffset + VISIBLE_SHOPS, totalEntries);
             for (int i = scrollOffset; i < endIdx; i++) {
@@ -522,14 +508,16 @@ public class ShopListScreen extends Screen {
 
                 if (isCreateEntry(i)) {
                     drawPlayerAvatar(ctx, playerUuid, playerName, rowX + 3, rowY + 3);
-                    ctx.drawString(font, Component.literal("Create Your Shop"), rowX + FACE_SIZE + 8, rowY + 7, 0xFF55FF55);
+                    ctx.drawString(font, Component.literal(I18n.get("shoplist.create")), rowX + FACE_SIZE + 8, rowY + 7, 0xFF55FF55);
                     ctx.drawString(font, Component.literal("+"), rowX + rowW - 16, rowY + 7, 0xFF55FF55);
                 } else {
                     ShopEntry entry = getShopEntry(i);
                     if (entry != null) {
                         drawPlayerAvatar(ctx, entry.uuid, entry.ownerName, rowX + 3, rowY + 3);
-                        ctx.drawString(font, Component.literal(entry.ownerName + "'s Shop"), rowX + FACE_SIZE + 8, rowY + 4, entry.isOwnShop ? 0xFF55FFFF : 0xFFFFFFFF);
-                        String offerComp = "(" + entry.offerCount + (entry.offerCount == 1 ? " Offer)" : " Offers)");
+                        ctx.drawString(font, Component.literal(I18n.get("shoplist.shop_of", entry.ownerName)), rowX + FACE_SIZE + 8, rowY + 4, entry.isOwnShop ? 0xFF55FFFF : 0xFFFFFFFF);
+                        String offerComp = entry.offerCount == 1
+                            ? I18n.get("shoplist.offer_single", entry.offerCount)
+                            : I18n.get("shoplist.offer_plural", entry.offerCount);
                         int offerWidth = font.width(offerComp);
                         ctx.drawString(font, Component.literal(offerComp), rowX + rowW - offerWidth - 6, rowY + 4, 0xFFAAAAAA);
                     }
@@ -543,7 +531,7 @@ public class ShopListScreen extends Screen {
                 ctx.fill(listX + listW - 5, thumbY, listX + listW - 2, thumbY + thumbH, 0xFFAAAAAA);
             }
         }
-        ctx.drawCenteredString(font, Component.literal(shops.size() + (shops.size() == 1 ? " Shop" : " Shops")), px + W / 2, py + H - 48, 0xFFAAAAAA);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("shoplist.count", shops.size())), px + W / 2, py + H - 48, 0xFFAAAAAA);
         super.render(ctx, mx, my, delta);
 
         // After first render: load skins in background thread

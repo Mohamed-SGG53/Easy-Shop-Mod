@@ -1,7 +1,7 @@
 package com.example.shopmod.screen;
 
-import com.example.shopmod.client.ClientPacketHandler;
 import com.example.shopmod.client.ClientPacketHandler.ShopNavigationHolder;
+import com.example.shopmod.data.I18n;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
@@ -32,7 +32,7 @@ public class ShopBuyerScreen extends Screen {
     private static final int HEADER_H = 16;
 
     public ShopBuyerScreen(String shopName, ShopData data) {
-        super(Component.literal(shopName + "'s Shop"));
+        super(Component.literal(I18n.get("buyer.title", shopName)));
         this.shopName = shopName;
         this.shopData = data;
     }
@@ -65,7 +65,7 @@ public class ShopBuyerScreen extends Screen {
         int px = (width - W) / 2, py = (height - H) / 2;
         List<ShopData.ShopTrade> trades = shopData.getTrades();
         if (!trades.isEmpty()) {
-            addRenderableWidget(Button.builder(Component.literal("Buy"), btn -> {
+            addRenderableWidget(Button.builder(Component.literal(I18n.get("buyer.buy")), btn -> {
                 if (selectedTrade >= 0 && selectedTrade < trades.size())
                     ClientPlayNetworking.send(new ModPackets.DoTradePayload(shopName, selectedTrade));
             }).bounds(px + W / 2 - 95, py + H - 26, 80, 22).build());
@@ -98,11 +98,11 @@ public class ShopBuyerScreen extends Screen {
         ctx.fill(listX, listY, listX + listW, listY + totalH, 0x88000000);
         drawBorder(ctx, listX, listY, listW, totalH, 0xFF666666);
 
-        // ── Header row background ──
+        // Header row background
         int headerY = listY;
         ctx.fill(listX + 1, headerY, listX + listW - 1, headerY + HEADER_H, 0xFF2A2A2A);
 
-        // ── Column header text ──
+        // Column header text
         int col1Center = listX + COL_ITEM_W / 2;
         int col2Center = listX + COL_ITEM_W + COL_PRICE_W / 2;
         int col3Start = listX + COL_ITEM_W + COL_PRICE_W;
@@ -111,26 +111,25 @@ public class ShopBuyerScreen extends Screen {
         int headerTextY = headerY + (HEADER_H - 8) / 2;
 
         // Item = Green, Price = Yellow, Details = White
-        ctx.drawCenteredString(font, Component.literal("Item"), col1Center, headerTextY, 0xFF55FF55);
-        ctx.drawCenteredString(font, Component.literal("Price"), col2Center, headerTextY, 0xFFFFFF55);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("shop.item_header")), col1Center, headerTextY, 0xFF55FF55);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("shop.price_header")), col2Center, headerTextY, 0xFFFFFF55);
 
-        // Details header with arrow icon
-        String detailsHeader = "Details";
+        // Details header
+        String detailsHeader = I18n.get("buyer.details");
         int detailsW = font.width(detailsHeader);
         ctx.drawString(font, Component.literal(detailsHeader), col3Center - detailsW / 2, headerTextY, 0xFFFFFFFF);
 
-        // ── Vertical column separators ──
+        // Vertical column separators
         int sep1X = listX + COL_ITEM_W;
         int sep2X = listX + COL_ITEM_W + COL_PRICE_W;
-        // Full height vertical lines (header + data)
         ctx.fill(sep1X, listY + 1, sep1X + 1, listY + totalH - 1, 0xFF555555);
         ctx.fill(sep2X, listY + 1, sep2X + 1, listY + totalH - 1, 0xFF555555);
 
-        // ── Horizontal separator below header ──
+        // Horizontal separator below header
         ctx.fill(listX + 1, headerY + HEADER_H, listX + listW - 1, headerY + HEADER_H + 1, 0xFF555555);
 
         if (trades.isEmpty()) {
-            ctx.drawCenteredString(font, Component.literal("No trades available"),
+            ctx.drawCenteredString(font, Component.literal(I18n.get("buyer.no_trades")),
                 listX + listW / 2, headerY + HEADER_H + dataH / 2 - 4, 0xFFFFFFFF);
         } else {
             int endIdx = Math.min(scrollOffset + VISIBLE_TRADES, trades.size());
@@ -145,21 +144,21 @@ public class ShopBuyerScreen extends Screen {
                     ctx.fill(listX + 2, rowY, listX + listW - 2, rowY + ROW_HEIGHT, 0x40FFFFFF);
                 }
 
-                // ── Column 1: Item slot ──
+                // Column 1: Item slot
                 int itemSlotX = col1Center - SLOT_SIZE / 2;
                 int itemSlotY = rowY + (ROW_HEIGHT - SLOT_SIZE) / 2;
                 ctx.fill(itemSlotX, itemSlotY, itemSlotX + SLOT_SIZE, itemSlotY + SLOT_SIZE, 0xFF333333);
                 drawBorder(ctx, itemSlotX, itemSlotY, SLOT_SIZE, SLOT_SIZE, 0xFF666666);
                 drawItemWithCount(ctx, trade.sellItem, itemSlotX + 3, itemSlotY + 3);
 
-                // ── Column 2: Price slot ──
+                // Column 2: Price slot
                 int priceSlotX = col2Center - SLOT_SIZE / 2;
                 int priceSlotY = rowY + (ROW_HEIGHT - SLOT_SIZE) / 2;
                 ctx.fill(priceSlotX, priceSlotY, priceSlotX + SLOT_SIZE, priceSlotY + SLOT_SIZE, 0xFF333333);
                 drawBorder(ctx, priceSlotX, priceSlotY, SLOT_SIZE, SLOT_SIZE, 0xFF666666);
                 drawItemWithCount(ctx, trade.buyItem, priceSlotX + 3, priceSlotY + 3);
 
-                // ── Column 3: Details text (Item -> Price) ──
+                // Column 3: Details text (Item -> Price)
                 String sellName = trade.sellItem.getHoverName().getString();
                 String buyName = trade.buyItem.getHoverName().getString();
                 String tradeStr = sellName + " \u2192 " + buyName;
@@ -187,11 +186,11 @@ public class ShopBuyerScreen extends Screen {
                 ctx.fill(listX + listW - 6, thumbY, listX + listW - 2, thumbY + thumbH, 0xFFAAAAAA);
             }
 
-            ctx.drawString(font, Component.literal("Offers: " + trades.size()), px + W / 2 - 5, py + H - 22, 0xFFFFFFFF);
+            ctx.drawString(font, Component.literal(I18n.get("buyer.offers_count", trades.size())), px + W / 2 - 5, py + H - 18, 0xFFFFFFFF);
         }
         super.render(ctx, mx, my, delta);
 
-        // ── Tooltip rendering for hovered item slots ──
+        // Tooltip rendering for hovered item slots
         for (int ti = scrollOffset; ti < Math.min(scrollOffset + VISIBLE_TRADES, trades.size()); ti++) {
             ShopData.ShopTrade trade = trades.get(ti);
             int ry = headerY + HEADER_H + 1 + (ti - scrollOffset) * ROW_HEIGHT;

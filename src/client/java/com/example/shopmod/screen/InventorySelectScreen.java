@@ -1,6 +1,7 @@
 package com.example.shopmod.screen;
 
 import com.example.shopmod.client.ClientPacketHandler;
+import com.example.shopmod.data.I18n;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
@@ -39,7 +40,7 @@ public class InventorySelectScreen extends Screen {
     private static final int H = 170;
 
     public InventorySelectScreen(String shopName, ShopData data) {
-        super(Component.literal("Select Item - " + shopName));
+        super(Component.literal(I18n.get("select.title") + " - " + shopName));
         this.shopName = shopName;
         this.shopData = data;
     }
@@ -59,7 +60,6 @@ public class InventorySelectScreen extends Screen {
 
         addRenderableWidget(Button.builder(Component.literal("\u2714"), btn -> {
             if (!selectedStack.isEmpty()) {
-                // NO client-side removal - server handles it via ADD_BOOK_TRADE_ID handler
                 ClientPacketHandler.PendingSellHolder.shopName = shopName;
                 ClientPacketHandler.PendingSellHolder.sellItem = selectedStack.copy();
                 ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName));
@@ -111,11 +111,11 @@ public class InventorySelectScreen extends Screen {
         ctx.fill(px, py, px + W, py + H, 0xF0101010);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 24, 0xFF3D2810);
-        ctx.drawCenteredString(font, Component.literal("Select Item - " + shopName), px + W / 2, py + 8, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("select.title") + " - " + shopName), px + W / 2, py + 8, 0xFFFFFFFF);
 
         int invX = px + 12;
         int invY = py + 42;
-        ctx.drawString(font, Component.literal("Inventory"), invX, invY - 10, 0xFFAAAAAA);
+        ctx.drawString(font, Component.literal(I18n.get("select.inventory")), invX, invY - 10, 0xFFAAAAAA);
 
         for (int row = 0; row < INV_ROWS; row++) {
             for (int col = 0; col < INV_COLS; col++) {
@@ -128,7 +128,7 @@ public class InventorySelectScreen extends Screen {
 
         int hotbarY = invY + INV_ROWS * SLOT_SIZE + 4;
         ctx.fill(invX, hotbarY, invX + INV_COLS * SLOT_SIZE, hotbarY + 1, 0xFF555555);
-        ctx.drawString(font, Component.literal("Hotbar"), invX, hotbarY + 4, 0xFFAAAAAA);
+        ctx.drawString(font, Component.literal(I18n.get("select.hotbar")), invX, hotbarY + 4, 0xFFAAAAAA);
         hotbarY += 14;
         for (int col = 0; col < INV_COLS; col++) {
             int sx = invX + col * SLOT_SIZE;
@@ -138,7 +138,7 @@ public class InventorySelectScreen extends Screen {
 
         int specialX = invX + INV_COLS * SLOT_SIZE + 20;
         int specialY = py + 70;
-        ctx.drawCenteredString(font, Component.literal("Sell"), specialX + SLOT_SIZE / 2, specialY - 10, 0xFF55FF55);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("select.sell")), specialX + SLOT_SIZE / 2, specialY - 10, 0xFF55FF55);
 
         boolean specialHov = isOverSlot(mx, my, specialX, specialY);
         ctx.fill(specialX, specialY, specialX + SLOT_SIZE, specialY + SLOT_SIZE, specialHov ? 0xFF4A6B4A : 0xFF3B5B3B);
@@ -153,7 +153,7 @@ public class InventorySelectScreen extends Screen {
         }
 
         drawCursorStack(ctx, mx, my);
-        ctx.drawCenteredString(font, Component.literal("Left: Pick/Place all | Right: Split/Place one"), px + W / 2, py + H - 14, 0xFF888888);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("select.hint")), px + W / 2, py + H - 14, 0xFF888888);
         super.render(ctx, mx, my, delta);
     }
 

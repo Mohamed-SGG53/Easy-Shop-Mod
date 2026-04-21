@@ -1,5 +1,6 @@
 package com.example.shopmod.screen;
 
+import com.example.shopmod.data.I18n;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
@@ -24,7 +25,7 @@ public class StorageScreen extends Screen {
     private static final int W = COLS * 20 + 30, H = ROWS * 20 + 100;
 
     public StorageScreen(String shopName, ShopData data) {
-        super(Component.literal("Storage - " + shopName));
+        super(Component.literal(I18n.get("storage.title", shopName)));
         this.shopName = shopName;
         this.shopData = data;
     }
@@ -40,10 +41,10 @@ public class StorageScreen extends Screen {
     protected void init() {
         int px = (width - W) / 2, py = (height - H) / 2;
         int total = Math.max(1, (int) Math.ceil(shopData.getStorage().size() / (double) PER_PAGE));
-        if (page > 0) addRenderableWidget(Button.builder(Component.literal("<"), btn -> { page--; clearWidgets(); init(); }).bounds(px + 10, py + H - 28, 40, 20).build());
-        if (page < total - 1) addRenderableWidget(Button.builder(Component.literal(">"), btn -> { page++; clearWidgets(); init(); }).bounds(px + W - 50, py + H - 28, 40, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Back"), btn -> ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName))).bounds(px + W / 2 - 85, py + H - 28, 70, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose()).bounds(px + W / 2 + 15, py + H - 28, 70, 20).build());
+        if (page > 0) addRenderableWidget(Button.builder(Component.literal(I18n.get("shop.prev")), btn -> { page--; clearWidgets(); init(); }).bounds(px + 10, py + H - 28, 40, 20).build());
+        if (page < total - 1) addRenderableWidget(Button.builder(Component.literal(I18n.get("shop.next")), btn -> { page++; clearWidgets(); init(); }).bounds(px + W - 50, py + H - 28, 40, 20).build());
+        addRenderableWidget(Button.builder(Component.literal(I18n.get("picker.back")), btn -> ClientPlayNetworking.send(new ModPackets.ReqOwnerScreenPayload(shopName))).bounds(px + W / 2 - 85, py + H - 28, 70, 20).build());
+        addRenderableWidget(Button.builder(Component.literal(I18n.get("shop.close")), btn -> onClose()).bounds(px + W / 2 + 15, py + H - 28, 70, 20).build());
     }
 
     @Override
@@ -53,7 +54,7 @@ public class StorageScreen extends Screen {
         ctx.fill(px, py, px + W, py + H, 0xE0100800);
         drawBorder(ctx, px, py, W, H, 0xFF8B6914);
         ctx.fill(px, py, px + W, py + 20, 0xFF3D1F00);
-        ctx.drawCenteredString(font, Component.literal("Storage - " + shopName), px + W / 2, py + 6, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("storage.title", shopName)), px + W / 2, py + 6, 0xFFFFFFFF);
 
         List<ItemStack> storage = shopData.getStorage();
         int gridX = px + 10, gridY = py + 28;
@@ -74,7 +75,7 @@ public class StorageScreen extends Screen {
             if (hov) hovered = s;
         }
         int total = Math.max(1, (int) Math.ceil(storage.size() / (double) PER_PAGE));
-        ctx.drawCenteredString(font, Component.literal("Page " + (page + 1) + "/" + total + "  |  " + storage.size() + " items"), px + W / 2, py + H - 42, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("storage.page", page + 1, total, storage.size())), px + W / 2, py + H - 42, 0xFFFFFFFF);
         super.render(ctx, mx, my, delta);
         // Proper tooltip rendering
         if (!hovered.isEmpty()) {
