@@ -47,7 +47,7 @@ public class EnchantedBookAmountScreen extends Screen {
 
     @Override
     public void render(GuiGraphics ctx, int mx, int my, float delta) {
-        renderBackground(ctx, mx, my, delta);
+        ctx.fill(0, 0, width, height, 0x88000000);
         int px=(width-W)/2, py=(height-H)/2;
         ctx.fill(px,py,px+W,py+H,0xE0100800);
         drawBorder(ctx,px,py,W,H,0xFF8B6914);
