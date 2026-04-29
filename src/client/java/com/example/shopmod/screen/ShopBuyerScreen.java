@@ -73,11 +73,11 @@ public class ShopBuyerScreen extends Screen {
         if (!ShopNavigationHolder.isEmpty()) {
             addRenderableWidget(Button.builder(Component.literal("\u25C0"), btn -> {
                 String prev = ShopNavigationHolder.getPrevShop(shopName);
-                if (prev != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(prev));
+                if (prev != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(prev, 2));
             }).bounds(px - 26, py + H / 2 - 12, 22, 24).build());
             addRenderableWidget(Button.builder(Component.literal("\u25B6"), btn -> {
                 String next = ShopNavigationHolder.getNextShop(shopName);
-                if (next != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(next));
+                if (next != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(next, 1));
             }).bounds(px + W + 4, py + H / 2 - 12, 22, 24).build());
         }
     }

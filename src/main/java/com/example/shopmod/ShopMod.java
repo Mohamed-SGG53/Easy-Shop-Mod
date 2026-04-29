@@ -2,6 +2,7 @@ package com.example.shopmod;
 
 import com.example.shopmod.command.ShopCommand;
 import com.example.shopmod.data.I18n;
+import com.example.shopmod.data.PlayerSkinStore;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.data.ShopManager;
 import com.example.shopmod.network.ModPackets;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.nio.file.*;
 
 public class ShopMod implements ModInitializer {
     public static final String MOD_ID = "shopmod";
@@ -49,6 +51,7 @@ public class ShopMod implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_STORAGE_ID, ModPackets.OpenStoragePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_SHOPS_LIST_ID, ModPackets.OpenShopsListPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModPackets.SHOP_NAV_ID, ModPackets.ShopNavPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ModPackets.SKIN_DATA_ID, ModPackets.SkinDataPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.ADD_TRADE_ID,        ModPackets.AddTradePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.ADD_BOOK_TRADE_ID,    ModPackets.AddEnchantedBookTradePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.REMOVE_TRADE_ID,     ModPackets.RemoveTradePayload.CODEC);
@@ -61,6 +64,8 @@ public class ShopMod implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(ModPackets.OPEN_SHOP_FROM_LIST_ID, ModPackets.OpenShopFromListPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.CREATE_SHOP_FROM_LIST_ID, ModPackets.CreateShopFromListPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.TOGGLE_SHOP_MOVE_ID, ModPackets.ToggleShopMovePayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ModPackets.UPLOAD_SKIN_ID,      ModPackets.UploadSkinPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ModPackets.REQUEST_SKINS_ID,    ModPackets.RequestSkinsPayload.CODEC);
 
         CommandRegistrationCallback.EVENT.register(ShopCommand::register);
         registerServerPackets();
@@ -384,12 +389,26 @@ public class ShopMod implements ModInitializer {
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
                 String owner = payload.ownerName();
+                int direction = payload.direction();
                 String playerName = player.getName().getString();
+                MinecraftServer server = ctx.server();
+                ShopManager mgr = ShopManager.get(server);
 
                 if (playerName.equals(owner)) {
+                    // Own shop - always open owner screen (even if empty)
                     sendOpenOwner(player, owner);
-                } else {
+                } else if (direction == 0) {
+                    // From shop list (double click) - open directly, even if empty
                     sendOpenBuyer(player, owner);
+                } else {
+                    // Navigation (Next/Prev) - skip empty shops
+                    String target = findNextNonEmptyShop(mgr, owner, direction, playerName);
+                    if (target != null) {
+                        sendOpenBuyer(player, target);
+                    } else {
+                        // All shops are empty
+                        player.displayClientMessage(Component.literal(I18n.get("buyer.empty")), false);
+                    }
                 }
             }));
 
@@ -467,6 +486,73 @@ public class ShopMod implements ModInitializer {
                     syncShop(player, data);
                 });
             });
+
+        // ==================== Skin System Packets ====================
+
+        // C2S: Player uploads their skin PNG to server
+        ServerPlayNetworking.registerGlobalReceiver(ModPackets.UPLOAD_SKIN_ID,
+            (payload, ctx) -> {
+                UUID uuid = new UUID(payload.uuidMost(), payload.uuidLeast());
+                byte[] pngData = payload.pngData();
+                ctx.server().execute(() -> {
+                    if (pngData != null && pngData.length > 0) {
+                        PlayerSkinStore.saveSkin(uuid, pngData);
+                        LOGGER.info("[ShopMod] Received skin from {} ({} bytes)", uuid, pngData.length);
+
+                        // Broadcast the updated skin to all OTHER online players
+                        for (ServerPlayer onlinePlayer : ctx.server().getPlayerList().getPlayers()) {
+                            if (!onlinePlayer.getUUID().equals(uuid)) {
+                                ServerPlayNetworking.send(onlinePlayer, new ModPackets.SkinDataPayload(
+                                    payload.uuidMost(), payload.uuidLeast(), pngData
+                                ));
+                            }
+                        }
+                    }
+                });
+            });
+
+        // C2S: Player requests all other players' skins
+        ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQUEST_SKINS_ID,
+            (payload, ctx) -> {
+                UUID requesterUuid = new UUID(payload.uuidMost(), payload.uuidLeast());
+                ctx.server().execute(() -> {
+                    MinecraftServer server = ctx.server();
+                    Path skinsDir = PlayerSkinStore.getSkinsDir();
+
+                    // Send all skins from server storage (except the requester's own)
+                    try {
+                        if (Files.exists(skinsDir)) {
+                            for (java.nio.file.Path skinFile : Files.list(skinsDir).toArray(java.nio.file.Path[]::new)) {
+                                String fileName = skinFile.getFileName().toString();
+                                if (!fileName.endsWith(".png")) continue;
+
+                                // Parse UUID from filename
+                                String uuidStr = fileName.substring(0, fileName.length() - 4);
+                                try {
+                                    UUID skinUuid = UUID.fromString(uuidStr);
+                                    // Skip the requester's own skin
+                                    if (skinUuid.equals(requesterUuid)) continue;
+
+                                    byte[] data = Files.readAllBytes(skinFile);
+                                    if (data != null && data.length > 0) {
+                                        ServerPlayNetworking.send(ctx.player(), new ModPackets.SkinDataPayload(
+                                            skinUuid.getMostSignificantBits(),
+                                            skinUuid.getLeastSignificantBits(),
+                                            data
+                                        ));
+                                    }
+                                } catch (IllegalArgumentException ignored) {
+                                    // Not a valid UUID file, skip
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("[ShopMod] Error sending skins to {}: {}", requesterUuid, e.getMessage());
+                    }
+
+                    LOGGER.info("[ShopMod] Sent all available skins to {}", requesterUuid);
+                });
+            });
     }
 
     public static void syncShop(ServerPlayer player, ShopData data) {
@@ -523,6 +609,53 @@ public class ShopMod implements ModInitializer {
         }
 
         ServerPlayNetworking.send(player, new ModPackets.ShopNavPayload(orderedOwners));
+    }
+
+    /**
+     * Find the next non-empty shop in the given direction, skipping empty ones.
+     * @param direction 1 = next, 2 = prev
+     * @return shop owner name, or null if all shops are empty
+     */
+    private static String findNextNonEmptyShop(ShopManager mgr, String startOwner, int direction, String playerName) {
+        // Build ordered list: player first, then others (same order as sendShopNav)
+        List<String> orderedOwners = new ArrayList<>();
+        Set<String> owners = mgr.getAllOwners();
+
+        if (owners.contains(playerName)) {
+            orderedOwners.add(playerName);
+        }
+        for (String o : owners) {
+            if (!o.equals(playerName)) {
+                orderedOwners.add(o);
+            }
+        }
+
+        int size = orderedOwners.size();
+        if (size <= 1) return null;
+
+        int startIdx = orderedOwners.indexOf(startOwner);
+        if (startIdx < 0) return null;
+
+        // Check if start shop is already non-empty
+        ShopData startData = mgr.get(startOwner);
+        if (startData != null && !startData.getTrades().isEmpty()) {
+            return startOwner;
+        }
+
+        // Skip in direction, checking each shop
+        int step = (direction == 1) ? 1 : -1;
+        for (int i = 1; i < size; i++) {
+            int idx = ((startIdx + i * step) % size + size) % size;
+            String candidate = orderedOwners.get(idx);
+            // Skip own shop (owner sees owner screen, not buyer)
+            if (candidate.equals(playerName)) continue;
+            ShopData data = mgr.get(candidate);
+            if (data != null && !data.getTrades().isEmpty()) {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     public static void sendShopsList(ServerPlayer player) {
