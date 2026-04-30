@@ -65,11 +65,12 @@ public final class ClientPacketHandler {
             (payload, ctx) -> {
                 HolderLookup.Provider reg = ctx.client().level != null ? ctx.client().level.registryAccess() : null;
                 ShopData data = ShopData.fromNbt(payload.data(), reg);
+                String newShopName = payload.shopName();
                 ctx.client().execute(() -> {
                     if (ctx.client().screen instanceof ShopBuyerScreen s) {
-                        s.refreshData(data);
+                        s.refreshData(data, newShopName);
                     } else {
-                        ctx.client().setScreen(new ShopBuyerScreen(payload.shopName(), data));
+                        ctx.client().setScreen(new ShopBuyerScreen(newShopName, data));
                     }
                 });
             });

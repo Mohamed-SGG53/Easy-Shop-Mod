@@ -389,26 +389,14 @@ public class ShopMod implements ModInitializer {
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
                 String owner = payload.ownerName();
-                int direction = payload.direction();
                 String playerName = player.getName().getString();
-                MinecraftServer server = ctx.server();
-                ShopManager mgr = ShopManager.get(server);
 
                 if (playerName.equals(owner)) {
-                    // Own shop - always open owner screen (even if empty)
+                    // Own shop - open owner screen
                     sendOpenOwner(player, owner);
-                } else if (direction == 0) {
-                    // From shop list (double click) - open directly, even if empty
-                    sendOpenBuyer(player, owner);
                 } else {
-                    // Navigation (Next/Prev) - skip empty shops
-                    String target = findNextNonEmptyShop(mgr, owner, direction, playerName);
-                    if (target != null) {
-                        sendOpenBuyer(player, target);
-                    } else {
-                        // All shops are empty
-                        player.displayClientMessage(Component.literal(I18n.get("buyer.empty")), false);
-                    }
+                    // Other player's shop - open buyer screen (even if empty)
+                    sendOpenBuyer(player, owner);
                 }
             }));
 
@@ -578,11 +566,7 @@ public class ShopMod implements ModInitializer {
     public static void sendOpenBuyer(ServerPlayer player, String owner) {
         MinecraftServer server = player.createCommandSourceStack().getServer();
         ShopManager mgr = ShopManager.get(server);
-        ShopData data   = mgr.get(owner);
-        if (data == null || data.getTrades().isEmpty()) {
-            player.displayClientMessage(Component.literal(I18n.get("buyer.empty")), false);
-            return;
-        }
+        ShopData data   = mgr.getOrCreate(owner);
         if (data.getOwnerUuid() == null) {
             ServerPlayer ownerPlayer = server.getPlayerList().getPlayer(owner);
             if (ownerPlayer != null) {
@@ -609,53 +593,6 @@ public class ShopMod implements ModInitializer {
         }
 
         ServerPlayNetworking.send(player, new ModPackets.ShopNavPayload(orderedOwners));
-    }
-
-    /**
-     * Find the next non-empty shop in the given direction, skipping empty ones.
-     * @param direction 1 = next, 2 = prev
-     * @return shop owner name, or null if all shops are empty
-     */
-    private static String findNextNonEmptyShop(ShopManager mgr, String startOwner, int direction, String playerName) {
-        // Build ordered list: player first, then others (same order as sendShopNav)
-        List<String> orderedOwners = new ArrayList<>();
-        Set<String> owners = mgr.getAllOwners();
-
-        if (owners.contains(playerName)) {
-            orderedOwners.add(playerName);
-        }
-        for (String o : owners) {
-            if (!o.equals(playerName)) {
-                orderedOwners.add(o);
-            }
-        }
-
-        int size = orderedOwners.size();
-        if (size <= 1) return null;
-
-        int startIdx = orderedOwners.indexOf(startOwner);
-        if (startIdx < 0) return null;
-
-        // Check if start shop is already non-empty
-        ShopData startData = mgr.get(startOwner);
-        if (startData != null && !startData.getTrades().isEmpty()) {
-            return startOwner;
-        }
-
-        // Skip in direction, checking each shop
-        int step = (direction == 1) ? 1 : -1;
-        for (int i = 1; i < size; i++) {
-            int idx = ((startIdx + i * step) % size + size) % size;
-            String candidate = orderedOwners.get(idx);
-            // Skip own shop (owner sees owner screen, not buyer)
-            if (candidate.equals(playerName)) continue;
-            ShopData data = mgr.get(candidate);
-            if (data != null && !data.getTrades().isEmpty()) {
-                return candidate;
-            }
-        }
-
-        return null;
     }
 
     public static void sendShopsList(ServerPlayer player) {
