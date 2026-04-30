@@ -89,12 +89,12 @@ public class ShopOwnerScreen extends Screen {
             addRenderableWidget(Button.builder(Component.literal("\u25C0"), btn -> {
                 ClientPacketHandler.PendingSellHolder.clear(); ClientPacketHandler.PendingBuyHolder.clear();
                 String prev = ShopNavigationHolder.getPrevShop(shopName);
-                if (prev != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(prev));
+                if (prev != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(prev, 2));
             }).bounds(px - 26, py + H / 2 - 12, 22, 24).build());
             addRenderableWidget(Button.builder(Component.literal("\u25B6"), btn -> {
                 ClientPacketHandler.PendingSellHolder.clear(); ClientPacketHandler.PendingBuyHolder.clear();
                 String next = ShopNavigationHolder.getNextShop(shopName);
-                if (next != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(next));
+                if (next != null) ClientPlayNetworking.send(new ModPackets.OpenShopFromListPayload(next, 1));
             }).bounds(px + W + 4, py + H / 2 - 12, 22, 24).build());
         }
     }

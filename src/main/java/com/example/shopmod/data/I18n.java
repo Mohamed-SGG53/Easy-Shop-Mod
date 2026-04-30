@@ -124,6 +124,8 @@ public class I18n {
         EN.put("msg.trade_item_taken", "\u00a7aTook \u00a7f%s \u00a7ax%d");
         EN.put("msg.inventory_full", "\u00a7cInventory is full!");
 
+        EN.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cYou have not placed your skin PNG in \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Your face will appear as default in the Shops List until you add it.");
+
         EN.put("storage.title", "Storage - %s");
         EN.put("storage.page", "Page %d/%d  |  %d items");
         EN.put("storage.empty", "Storage is empty");
@@ -217,6 +219,8 @@ public class I18n {
         AR.put("msg.trade_success", "\u00a7aتمت الصفقة بنجاح! حصلت على \u00a7f%s");
         AR.put("msg.trade_item_taken", "\u00a7aتم أخذ \u00a7f%s \u00a7ax%d");
         AR.put("msg.inventory_full", "\u00a7cالمخزون ممتلئ!");
+
+        AR.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cلم تقم بوضع صورة السكن الخاصة بك PNG في \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. سيظهر وجهك بشكل افتراضي في قائمة المتاجر حتى تقوم بإضافتها.");
 
         AR.put("storage.title", "مخزن - %s");
         AR.put("storage.page", "صفحة %d/%d | %d عنصر");
@@ -312,6 +316,8 @@ public class I18n {
         ZH.put("msg.trade_item_taken", "\u00a7a取走了 \u00a7f%s \u00a7ax%d");
         ZH.put("msg.inventory_full", "\u00a7c背包已满!");
 
+        ZH.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c你还没有将皮肤 PNG 图片放入 \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c。在你的商店列表中，你的头像将显示为默认头像，直到你添加为止。");
+
         ZH.put("storage.title", "仓库 - %s");
         ZH.put("storage.page", "第 %d/%d 页 | %d 个物品");
         ZH.put("storage.empty", "仓库为空");
@@ -405,6 +411,8 @@ public class I18n {
         JA.put("msg.trade_success", "\u00a7a取引完了! \u00a7f%sを入手しました");
         JA.put("msg.trade_item_taken", "\u00a7a\u00a7f%s \u00a7ax%dを取り出しました");
         JA.put("msg.inventory_full", "\u00a7cインベントリが満杯です!");
+
+        JA.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cスキンPNG画像を \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c に配置していません。追加するまで、ショップリストではデフォルトの顔が表示されます。");
 
         JA.put("storage.title", "ストレージ - %s");
         JA.put("storage.page", "ページ %d/%d | %d 個のアイテム");
@@ -500,6 +508,8 @@ public class I18n {
         KO.put("msg.trade_item_taken", "\u00a7a\u00a7f%s \u00a7ax%d을(를) 꺼냈습니다");
         KO.put("msg.inventory_full", "\u00a7c인벤토리가 가득 찼습니다!");
 
+        KO.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c가이스킨 PNG 이미지를 \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c 에 넣지 않았습니다. 추가할 때까지 상점 목록에서 기본 프로필 이미지가 표시됩니다.");
+
         KO.put("storage.title", "보관함 - %s");
         KO.put("storage.page", "%d/%d 페이지 | %d개 아이템");
         KO.put("storage.empty", "보관함이 비어 있습니다");
@@ -593,6 +603,8 @@ public class I18n {
         ES.put("msg.trade_success", "\u00a7aIntercambio completado! Obtuviste \u00a7f%s");
         ES.put("msg.trade_item_taken", "\u00a7aTomaste \u00a7f%s \u00a7ax%d");
         ES.put("msg.inventory_full", "\u00a7cEl inventario esta lleno!");
+
+        ES.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cNo has colocado tu skin PNG en \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Tu cara aparecera como predeterminada en la Lista de Tiendas hasta que la agregues.");
 
         ES.put("storage.title", "Almacen - %s");
         ES.put("storage.page", "Pagina %d/%d | %d articulos");
@@ -688,6 +700,8 @@ public class I18n {
         PT.put("msg.trade_item_taken", "\u00a7aPegou \u00a7f%s \u00a7ax%d");
         PT.put("msg.inventory_full", "\u00a7cO inventario esta cheio!");
 
+        PT.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVoce nao colocou sua skin PNG em \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Seu rosto aparecera como padrao na Lista de Lojas ate voce adiciona-la.");
+
         PT.put("storage.title", "Armazenamento - %s");
         PT.put("storage.page", "Pagina %d/%d | %d itens");
         PT.put("storage.empty", "O armazenamento esta vazio");
@@ -781,6 +795,8 @@ public class I18n {
         RU.put("msg.trade_success", "\u00a7aObmen zavershen! Vy poluchili \u00a7f%s");
         RU.put("msg.trade_item_taken", "\u00a7aVzyato \u00a7f%s \u00a7ax%d");
         RU.put("msg.inventory_full", "\u00a7cInventar polon!");
+
+        RU.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVy ne pomestili svoy skin PNG v \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Vashe litso budet otobrazhat'sya po umolchaniyu v spiske magazinov, poka vy ego ne dobavite.");
 
         RU.put("storage.title", "Khranilishche - %s");
         RU.put("storage.page", "Stranitsa %d/%d | %d predmetov");
@@ -876,6 +892,8 @@ public class I18n {
         DE.put("msg.trade_item_taken", "\u00a7a\u00a7f%s \u00a7ax%d genommen");
         DE.put("msg.inventory_full", "\u00a7cInventar ist voll!");
 
+        DE.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cDu hast dein Skin PNG nicht in \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c abgelegt. Dein Gesicht wird in der Shop-Liste als Standard angezeigt, bis du es hinzufuegst.");
+
         DE.put("storage.title", "Lager - %s");
         DE.put("storage.page", "Seite %d/%d | %d Gegenstaende");
         DE.put("storage.empty", "Lager ist leer");
@@ -969,6 +987,8 @@ public class I18n {
         FR.put("msg.trade_success", "\u00a7aEchange termine! Vous avez obtenu \u00a7f%s");
         FR.put("msg.trade_item_taken", "\u00a7aPris \u00a7f%s \u00a7ax%d");
         FR.put("msg.inventory_full", "\u00a7cL'inventaire est plein!");
+
+        FR.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVous n'avez pas place votre skin PNG dans \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Votre visage apparaitra par defaut dans la Liste des Boutiques jusqu'a ce que vous l'ajoutiez.");
 
         FR.put("storage.title", "Stockage - %s");
         FR.put("storage.page", "Page %d/%d | %d articles");

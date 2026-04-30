@@ -189,10 +189,13 @@ public final class ModPackets {
     // C2S Payloads
     // ============================================================
 
-    public record OpenShopFromListPayload(String ownerName) implements CustomPacketPayload {
+    public record OpenShopFromListPayload(String ownerName, int direction) implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, OpenShopFromListPayload> CODEC = StreamCodec.of(
-            (buf, v) -> buf.writeUtf(v.ownerName()),
-            buf -> new OpenShopFromListPayload(buf.readUtf())
+            (buf, v) -> {
+                buf.writeUtf(v.ownerName());
+                buf.writeByte(v.direction());
+            },
+            buf -> new OpenShopFromListPayload(buf.readUtf(), buf.readByte())
         );
         @Override public CustomPacketPayload.Type<OpenShopFromListPayload> type() { return OPEN_SHOP_FROM_LIST_ID; }
     }
@@ -344,6 +347,54 @@ public final class ModPackets {
             }
         );
         @Override public CustomPacketPayload.Type<ShopNavPayload> type() { return SHOP_NAV_ID; }
+    }
+
+    // ============================================================
+    // Skin Packets
+    // ============================================================
+
+    // C2S - Player uploads their skin PNG to server
+    public static final CustomPacketPayload.Type<UploadSkinPayload> UPLOAD_SKIN_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "upload_skin"));
+
+    // C2S - Player requests all other players' skins from server
+    public static final CustomPacketPayload.Type<RequestSkinsPayload> REQUEST_SKINS_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "request_skins"));
+
+    // S2C - Server sends one player's skin PNG data to a client
+    public static final CustomPacketPayload.Type<SkinDataPayload> SKIN_DATA_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "skin_data"));
+
+    public record UploadSkinPayload(long uuidMost, long uuidLeast, byte[] pngData) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, UploadSkinPayload> CODEC = StreamCodec.of(
+            (buf, v) -> {
+                buf.writeLong(v.uuidMost());
+                buf.writeLong(v.uuidLeast());
+                buf.writeByteArray(v.pngData());
+            },
+            buf -> new UploadSkinPayload(buf.readLong(), buf.readLong(), buf.readByteArray())
+        );
+        @Override public CustomPacketPayload.Type<UploadSkinPayload> type() { return UPLOAD_SKIN_ID; }
+    }
+
+    public record RequestSkinsPayload(long uuidMost, long uuidLeast) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, RequestSkinsPayload> CODEC = StreamCodec.of(
+            (buf, v) -> {
+                buf.writeLong(v.uuidMost());
+                buf.writeLong(v.uuidLeast());
+            },
+            buf -> new RequestSkinsPayload(buf.readLong(), buf.readLong())
+        );
+        @Override public CustomPacketPayload.Type<RequestSkinsPayload> type() { return REQUEST_SKINS_ID; }
+    }
+
+    public record SkinDataPayload(long uuidMost, long uuidLeast, byte[] pngData) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, SkinDataPayload> CODEC = StreamCodec.of(
+            (buf, v) -> {
+                buf.writeLong(v.uuidMost());
+                buf.writeLong(v.uuidLeast());
+                buf.writeByteArray(v.pngData());
+            },
+            buf -> new SkinDataPayload(buf.readLong(), buf.readLong(), buf.readByteArray())
+        );
+        @Override public CustomPacketPayload.Type<SkinDataPayload> type() { return SKIN_DATA_ID; }
     }
 
     private ModPackets() {}

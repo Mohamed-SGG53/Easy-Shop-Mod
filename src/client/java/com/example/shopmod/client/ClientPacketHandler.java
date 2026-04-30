@@ -8,6 +8,7 @@ import com.example.shopmod.screen.ShopBuyerScreen;
 import com.example.shopmod.screen.ShopListScreen;
 import com.example.shopmod.screen.ShopOwnerScreen;
 import com.example.shopmod.screen.StorageScreen;
+import com.example.shopmod.client.SkinHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -17,6 +18,7 @@ import net.minecraft.core.HolderLookup;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Environment(EnvType.CLIENT)
 public final class ClientPacketHandler {
@@ -118,6 +120,22 @@ public final class ClientPacketHandler {
                         s.rebuild();
                     }
                 });
+            });
+
+        // ==================== Skin System Receivers ====================
+
+        // S2C: Server sends another player's skin data
+        ClientPlayNetworking.registerGlobalReceiver(ModPackets.SKIN_DATA_ID,
+            (payload, ctx) -> {
+                UUID uuid = new UUID(payload.uuidMost(), payload.uuidLeast());
+                byte[] pngData = payload.pngData();
+                // Save to disk in background thread
+                new Thread("ShopMod-SkinSave") {
+                    @Override
+                    public void run() {
+                        SkinHelper.saveOtherSkin(uuid, pngData);
+                    }
+                }.start();
             });
     }
 
