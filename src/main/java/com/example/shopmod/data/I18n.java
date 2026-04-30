@@ -239,7 +239,7 @@ public class I18n {
         AR.put("buyer.empty", "المتجر فارغ");
         AR.put("buyer.buy", "شراء");
         AR.put("buyer.details", "التفاصيل");
-        AR.put("buyer.no_trades", "لا توجد صفقات متاحة");
+        AR.put("buyer.no_trades", "لا توجد عروض متاحة");
         AR.put("buyer.offers_count", "العروض: %d");
         AR.put("buyer.you_get", "ستحصل على:");
         AR.put("buyer.you_pay", "ستدفع:");

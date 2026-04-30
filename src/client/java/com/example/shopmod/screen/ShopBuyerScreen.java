@@ -19,7 +19,7 @@ import java.util.List;
 @Environment(EnvType.CLIENT)
 public class ShopBuyerScreen extends Screen {
 
-    private final String shopName;
+    private String shopName;
     private ShopData shopData;
     private int selectedTrade = 0;
     private int scrollOffset = 0;
@@ -38,6 +38,11 @@ public class ShopBuyerScreen extends Screen {
     }
 
     public void rebuild() { clearWidgets(); init(); }
+
+    public void refreshData(ShopData data, String newShopName) {
+        this.shopName = newShopName;
+        refreshData(data);
+    }
 
     public void refreshData(ShopData data) {
         this.shopData = data;
@@ -89,7 +94,7 @@ public class ShopBuyerScreen extends Screen {
         ctx.fill(px, py, px + W, py + H, 0xCC000000);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 22, 0xFF553311);
-        ctx.centeredText(font, title, px + W / 2, py + 7, 0xFFFFFFFF);
+        ctx.centeredText(font, Component.literal(I18n.get("buyer.title", shopName)), px + W / 2, py + 7, 0xFFFFFFFF);
 
         List<ShopData.ShopTrade> trades = shopData.getTrades();
         int listX = px + 10, listY = py + 28, listW = W - 20;
@@ -130,7 +135,7 @@ public class ShopBuyerScreen extends Screen {
 
         if (trades.isEmpty()) {
             ctx.centeredText(font, Component.literal(I18n.get("buyer.no_trades")),
-                listX + listW / 2, headerY + HEADER_H + dataH / 2 - 4, 0xFFFFFFFF);
+                px + W / 2, py + H - 20, 0xFFFFFFFF);
         } else {
             int endIdx = Math.min(scrollOffset + VISIBLE_TRADES, trades.size());
             for (int i = scrollOffset; i < endIdx; i++) {
