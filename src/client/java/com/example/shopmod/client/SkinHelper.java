@@ -2,7 +2,7 @@ package com.example.shopmod.client;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 
 import com.example.shopmod.ShopMod;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Client-side skin helper for the Easy Shop Mod.
  * Reads skins from config/Easy Shop Mod/AllPlayerSkins/{uuid}.png
  * Extracts the 8x8 head face + overlay from the skin PNG.
- * Scales the face using manual integer pixel mapping for pixel-perfect rendering.
+ * Scales the face using Graphics2D (nearest-neighbor) for pixel-perfect rendering.
  * Default fallback: gray square.
  */
 @Environment(EnvType.CLIENT)
@@ -116,7 +116,7 @@ public final class SkinHelper {
      * @param size Total size including border (e.g. 22 = 1px border + 20px face + 1px border)
      * The 8x8 face is scaled using manual pixel mapping for perfectly even pixel distribution.
      */
-    public static void drawPlayerFace(GuiGraphicsExtractor ctx, UUID uuid, int x, int y, int size) {
+    public static void drawPlayerFace(GuiGraphics ctx, UUID uuid, int x, int y, int size) {
         int innerSize = size - 2;
 
         // Draw 1px black outer border
@@ -154,7 +154,7 @@ public final class SkinHelper {
      * Each source pixel gets (targetSize / 8) or (targetSize / 8 + 1) screen pixels,
      * distributed as evenly as possible — no NEAREST_NEIGHBOR artifacts.
      */
-    private static void drawScaledFace(GuiGraphicsExtractor ctx, BufferedImage face, int x, int y, int targetSize) {
+    private static void drawScaledFace(GuiGraphics ctx, BufferedImage face, int x, int y, int targetSize) {
         int srcW = face.getWidth();
         int srcH = face.getHeight();
 

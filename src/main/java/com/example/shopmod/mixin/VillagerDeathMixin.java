@@ -48,12 +48,12 @@ public class VillagerDeathMixin {
                 I18n.get("msg.shop_npc_killed", ownerName, killerName)
             );
             for (ServerPlayer p : nearby) {
-                p.sendSystemMessage(msg);
+                p.displayClientMessage(msg, false);
             }
 
             ServerPlayer owner = serverLevel.getServer().getPlayerList().getPlayer(ownerName);
             if (owner != null && !nearby.contains(owner)) {
-                owner.sendSystemMessage(msg);
+                owner.displayClientMessage(msg, false);
             }
 
             ShopManager mgr = ShopManager.get(serverLevel.getServer());

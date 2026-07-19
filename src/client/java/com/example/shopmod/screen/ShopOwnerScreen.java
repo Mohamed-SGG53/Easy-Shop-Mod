@@ -8,7 +8,7 @@ import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -45,7 +45,7 @@ public class ShopOwnerScreen extends Screen {
     public void setPendingBuyItem(ItemStack s) { this.pendingBuy = s; }
     public void setPendingSellItem(ItemStack s) { this.pendingSell = s; }
 
-    private static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
+    private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x, y, x + w, y + 1, color); ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color); ctx.fill(x + w - 1, y, x + w, y + h, color);
     }
@@ -99,28 +99,28 @@ public class ShopOwnerScreen extends Screen {
         }
     }
 
-    private void drawItemWithCount(GuiGraphicsExtractor ctx, ItemStack stack, int x, int y) {
+    private void drawItemWithCount(GuiGraphics ctx, ItemStack stack, int x, int y) {
         if (stack.isEmpty()) return;
-        ctx.item(stack, x, y);
+        ctx.renderItem(stack, x, y);
         if (stack.getCount() > 1) {
             int w = font.width(String.valueOf(stack.getCount()));
-            ctx.text(font, Component.literal(String.valueOf(stack.getCount())), x + 19 - w, y + 11, 0xFFFFFFFF);
+            ctx.drawString(font, Component.literal(String.valueOf(stack.getCount())), x + 19 - w, y + 11, 0xFFFFFFFF);
         }
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         ctx.fill(0, 0, width, height, 0x88000000);
         int px = (width - W) / 2, py = (height - H) / 2;
         ctx.fill(px, py, px + W, py + H, 0xCC000000);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 22, 0xFF553311);
-        ctx.centeredText(font, title, px + W / 2, py + 7, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, title, px + W / 2, py + 7, 0xFFFFFFFF);
 
         ctx.fill(px + 8, py + 24, px + W - 8, py + 96, 0x88000000);
         drawBorder(ctx, px + 8, py + 24, W - 16, 72, 0xFF666666);
 
-        ctx.text(font, Component.literal(I18n.get("shop.add_buyable")), px + 14, py + 38, 0xFF55FF55);
+        ctx.drawString(font, Component.literal(I18n.get("shop.add_buyable")), px + 14, py + 38, 0xFF55FF55);
         boolean sellHov = mx >= sellSlotX && mx < sellSlotX + SLOT_SIZE && my >= sellSlotY && my < sellSlotY + SLOT_SIZE;
         ctx.fill(sellSlotX, sellSlotY, sellSlotX + SLOT_SIZE, sellSlotY + SLOT_SIZE, sellHov ? 0xFF553300 : 0xFF333333);
         drawBorder(ctx, sellSlotX, sellSlotY, SLOT_SIZE, SLOT_SIZE, pendingSell.isEmpty() ? 0xFF888888 : 0xFF00FF00);
@@ -128,7 +128,7 @@ public class ShopOwnerScreen extends Screen {
             drawItemWithCount(ctx, pendingSell, sellSlotX + 6, sellSlotY + 6);
         }
 
-        ctx.text(font, Component.literal(I18n.get("shop.item_price")), px + 14, py + 70, 0xFFFFFF00);
+        ctx.drawString(font, Component.literal(I18n.get("shop.item_price")), px + 14, py + 70, 0xFFFFFF00);
         boolean buyHov = mx >= buySlotX && mx < buySlotX + SLOT_SIZE && my >= buySlotY && my < buySlotY + SLOT_SIZE;
         ctx.fill(buySlotX, buySlotY, buySlotX + SLOT_SIZE, buySlotY + SLOT_SIZE, buyHov ? 0xFF553300 : 0xFF333333);
         drawBorder(ctx, buySlotX, buySlotY, SLOT_SIZE, SLOT_SIZE, pendingBuy.isEmpty() ? 0xFF888888 : 0xFFFFFF00);
@@ -138,33 +138,33 @@ public class ShopOwnerScreen extends Screen {
 
         ctx.fill(px + 8, py + 100, px + W - 8, py + H - 36, 0x66000000);
         drawBorder(ctx, px + 8, py + 100, W - 16, H - 136, 0xFF666666);
-        ctx.text(font, Component.literal(I18n.get("shop.item_header")), px + 14, py + 106, 0xFF55FF55);
-        ctx.text(font, Component.literal(I18n.get("shop.price_header")), px + 140, py + 106, 0xFFFFFF00);
-        ctx.text(font, Component.literal(I18n.get("shop.cancel_header")), px + 290, py + 106, 0xFFFF5555);
+        ctx.drawString(font, Component.literal(I18n.get("shop.item_header")), px + 14, py + 106, 0xFF55FF55);
+        ctx.drawString(font, Component.literal(I18n.get("shop.price_header")), px + 140, py + 106, 0xFFFFFF00);
+        ctx.drawString(font, Component.literal(I18n.get("shop.cancel_header")), px + 290, py + 106, 0xFFFF5555);
         ctx.fill(px + 8, py + 118, px + W - 8, py + 119, 0xFF666666);
         ctx.fill(px + 125, py + 100, px + 126, py + H - 36, 0xFF555555);
         ctx.fill(px + 255, py + 100, px + 256, py + H - 36, 0xFF555555);
 
         List<ShopData.ShopTrade> trades = shopData.getTrades();
         int start = page * PER_PAGE, end = Math.min(start + PER_PAGE, trades.size());
-        if (trades.isEmpty()) ctx.centeredText(font, Component.literal(I18n.get("shop.no_offers")), px + W / 2, py + 150, 0xFFFFFFFF);
+        if (trades.isEmpty()) ctx.drawCenteredString(font, Component.literal(I18n.get("shop.no_offers")), px + W / 2, py + 150, 0xFFFFFFFF);
 
         for (int i = start; i < end; i++) {
             ShopData.ShopTrade t = trades.get(i);
             int ry = py + 123 + (i - start) * ROW_HEIGHT;
             drawItemWithCount(ctx, t.sellItem, px + 14, ry + 2);
             String sn = t.sellItem.getHoverName().getString();
-            if (sn.length() > 14) { ctx.text(font, Component.literal(sn.substring(0, 14)), px + 38, ry + 4, 0xFFFFFFFF); ctx.text(font, Component.literal(sn.substring(14)), px + 38, ry + 14, 0xFFFFFFFF); }
-            else ctx.text(font, Component.literal(sn), px + 38, ry + 4, 0xFFFFFFFF);
+            if (sn.length() > 14) { ctx.drawString(font, Component.literal(sn.substring(0, 14)), px + 38, ry + 4, 0xFFFFFFFF); ctx.drawString(font, Component.literal(sn.substring(14)), px + 38, ry + 14, 0xFFFFFFFF); }
+            else ctx.drawString(font, Component.literal(sn), px + 38, ry + 4, 0xFFFFFFFF);
             drawItemWithCount(ctx, t.buyItem, px + 140, ry + 2);
             String bn = t.buyItem.getHoverName().getString();
-            if (bn.length() > 14) { ctx.text(font, Component.literal(bn.substring(0, 14)), px + 164, ry + 4, 0xFFFFFFFF); ctx.text(font, Component.literal(bn.substring(14)), px + 164, ry + 14, 0xFFFFFFFF); }
-            else ctx.text(font, Component.literal(bn), px + 164, ry + 4, 0xFFFFFFFF);
+            if (bn.length() > 14) { ctx.drawString(font, Component.literal(bn.substring(0, 14)), px + 164, ry + 4, 0xFFFFFFFF); ctx.drawString(font, Component.literal(bn.substring(14)), px + 164, ry + 14, 0xFFFFFFFF); }
+            else ctx.drawString(font, Component.literal(bn), px + 164, ry + 4, 0xFFFFFFFF);
         }
 
         int total = Math.max(1, (int) Math.ceil(trades.size() / (double) PER_PAGE));
-        ctx.text(font, Component.literal(I18n.get("shop.page_offers", page + 1, total, trades.size())), px + W / 2 + 10, py + H - 24, 0xFFFFFFFF);
-        super.extractRenderState(ctx, mx, my, delta);
+        ctx.drawString(font, Component.literal(I18n.get("shop.page_offers", page + 1, total, trades.size())), px + W / 2 + 10, py + H - 24, 0xFFFFFFFF);
+        super.render(ctx, mx, my, delta);
 
         if (!pendingSell.isEmpty() && sellHov) {
             ctx.setTooltipForNextFrame(font, pendingSell, mx, my);
@@ -210,7 +210,7 @@ public class ShopOwnerScreen extends Screen {
         ClientPacketHandler.PendingSellHolder.clear(); ClientPacketHandler.PendingBuyHolder.clear();
     }
 
-    private void msg(String t) { if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.sendSystemMessage(Component.literal(t)); }
+    private void msg(String t) { if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.displayClientMessage(Component.literal(t), false); }
 
     @Override public boolean isPauseScreen() { return false; }
 }

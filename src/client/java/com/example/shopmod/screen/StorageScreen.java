@@ -6,7 +6,7 @@ import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -32,7 +32,7 @@ public class StorageScreen extends Screen {
 
     public void refreshData(ShopData data) { this.shopData = data; clearWidgets(); init(); }
 
-    private static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
+    private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x, y, x + w, y + 1, color); ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color); ctx.fill(x + w - 1, y, x + w, y + h, color);
     }
@@ -48,13 +48,13 @@ public class StorageScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         ctx.fill(0, 0, width, height, 0x88000000);
         int px = (width - W) / 2, py = (height - H) / 2;
         ctx.fill(px, py, px + W, py + H, 0xE0100800);
         drawBorder(ctx, px, py, W, H, 0xFF8B6914);
         ctx.fill(px, py, px + W, py + 20, 0xFF3D1F00);
-        ctx.centeredText(font, Component.literal(I18n.get("storage.title", shopName)), px + W / 2, py + 6, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("storage.title", shopName)), px + W / 2, py + 6, 0xFFFFFFFF);
 
         List<ItemStack> storage = shopData.getStorage();
         int gridX = px + 10, gridY = py + 28;
@@ -67,16 +67,16 @@ public class StorageScreen extends Screen {
             boolean hov = mx >= sx && mx < sx + 18 && my >= sy && my < sy + 18;
             ctx.fill(sx, sy, sx + 18, sy + 18, hov ? 0xAA8B6914 : 0x88333333);
             drawBorder(ctx, sx, sy, 18, 18, 0xFF555555);
-            ctx.item(s, sx + 1, sy + 1);
+            ctx.renderItem(s, sx + 1, sy + 1);
             if (s.getCount() > 1) {
                 int w = font.width(String.valueOf(s.getCount()));
-                ctx.text(font, Component.literal(String.valueOf(s.getCount())), sx + 19 - w, sy + 11, 0xFFFFFFFF);
+                ctx.drawString(font, Component.literal(String.valueOf(s.getCount())), sx + 19 - w, sy + 11, 0xFFFFFFFF);
             }
             if (hov) hovered = s;
         }
         int total = Math.max(1, (int) Math.ceil(storage.size() / (double) PER_PAGE));
-        ctx.centeredText(font, Component.literal(I18n.get("storage.page", page + 1, total, storage.size())), px + W / 2, py + H - 42, 0xFFFFFFFF);
-        super.extractRenderState(ctx, mx, my, delta);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("storage.page", page + 1, total, storage.size())), px + W / 2, py + H - 42, 0xFFFFFFFF);
+        super.render(ctx, mx, my, delta);
         // Proper tooltip rendering
         if (!hovered.isEmpty()) {
             ctx.setTooltipForNextFrame(font, hovered, mx, my);

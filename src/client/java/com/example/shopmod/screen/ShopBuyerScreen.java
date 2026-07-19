@@ -7,7 +7,7 @@ import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -39,11 +39,6 @@ public class ShopBuyerScreen extends Screen {
 
     public void rebuild() { clearWidgets(); init(); }
 
-    public void refreshData(ShopData data, String newShopName) {
-        this.shopName = newShopName;
-        refreshData(data);
-    }
-
     public void refreshData(ShopData data) {
         this.shopData = data;
         if (selectedTrade >= data.getTrades().size()) selectedTrade = Math.max(0, data.getTrades().size() - 1);
@@ -51,17 +46,22 @@ public class ShopBuyerScreen extends Screen {
         clearWidgets(); init();
     }
 
-    private static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
+    public void refreshData(ShopData data, String newShopName) {
+        this.shopName = newShopName;
+        refreshData(data);
+    }
+
+    private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x, y, x + w, y + 1, color); ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color); ctx.fill(x + w - 1, y, x + w, y + h, color);
     }
 
-    private void drawItemWithCount(GuiGraphicsExtractor ctx, ItemStack stack, int x, int y) {
+    private void drawItemWithCount(GuiGraphics ctx, ItemStack stack, int x, int y) {
         if (stack.isEmpty()) return;
-        ctx.item(stack, x, y);
+        ctx.renderItem(stack, x, y);
         if (stack.getCount() > 1) {
             int w = font.width(String.valueOf(stack.getCount()));
-            ctx.text(font, Component.literal(String.valueOf(stack.getCount())), x + 17 - w, y + 10, 0xFFFFFFFF);
+            ctx.drawString(font, Component.literal(String.valueOf(stack.getCount())), x + 17 - w, y + 10, 0xFFFFFFFF);
         }
     }
 
@@ -88,13 +88,13 @@ public class ShopBuyerScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         ctx.fill(0, 0, width, height, 0x88000000);
         int px = (width - W) / 2, py = (height - H) / 2;
         ctx.fill(px, py, px + W, py + H, 0xCC000000);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 22, 0xFF553311);
-        ctx.centeredText(font, Component.literal(I18n.get("buyer.title", shopName)), px + W / 2, py + 7, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("buyer.title", shopName)), px + W / 2, py + 7, 0xFFFFFFFF);
 
         List<ShopData.ShopTrade> trades = shopData.getTrades();
         int listX = px + 10, listY = py + 28, listW = W - 20;
@@ -116,13 +116,13 @@ public class ShopBuyerScreen extends Screen {
         int headerTextY = headerY + (HEADER_H - 8) / 2;
 
         // Item = Green, Price = Yellow, Details = White
-        ctx.centeredText(font, Component.literal(I18n.get("shop.item_header")), col1Center, headerTextY, 0xFF55FF55);
-        ctx.centeredText(font, Component.literal(I18n.get("shop.price_header")), col2Center, headerTextY, 0xFFFFFF55);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("shop.item_header")), col1Center, headerTextY, 0xFF55FF55);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("shop.price_header")), col2Center, headerTextY, 0xFFFFFF55);
 
         // Details header
         String detailsHeader = I18n.get("buyer.details");
         int detailsW = font.width(detailsHeader);
-        ctx.text(font, Component.literal(detailsHeader), col3Center - detailsW / 2, headerTextY, 0xFFFFFFFF);
+        ctx.drawString(font, Component.literal(detailsHeader), col3Center - detailsW / 2, headerTextY, 0xFFFFFFFF);
 
         // Vertical column separators
         int sep1X = listX + COL_ITEM_W;
@@ -134,7 +134,7 @@ public class ShopBuyerScreen extends Screen {
         ctx.fill(listX + 1, headerY + HEADER_H, listX + listW - 1, headerY + HEADER_H + 1, 0xFF555555);
 
         if (trades.isEmpty()) {
-            ctx.centeredText(font, Component.literal(I18n.get("buyer.no_trades")),
+            ctx.drawCenteredString(font, Component.literal(I18n.get("buyer.no_trades")),
                 px + W / 2, py + H - 20, 0xFFFFFFFF);
         } else {
             int endIdx = Math.min(scrollOffset + VISIBLE_TRADES, trades.size());
@@ -180,7 +180,7 @@ public class ShopBuyerScreen extends Screen {
 
                 int detailsTextY = rowY + (ROW_HEIGHT - 8) / 2;
                 int detailsTextX = col3Start + (listW - COL_ITEM_W - COL_PRICE_W - font.width(tradeStr)) / 2;
-                ctx.text(font, Component.literal(tradeStr), detailsTextX, detailsTextY, 0xFFCCCCCC);
+                ctx.drawString(font, Component.literal(tradeStr), detailsTextX, detailsTextY, 0xFFCCCCCC);
             }
 
             // Scrollbar
@@ -191,9 +191,9 @@ public class ShopBuyerScreen extends Screen {
                 ctx.fill(listX + listW - 6, thumbY, listX + listW - 2, thumbY + thumbH, 0xFFAAAAAA);
             }
 
-            ctx.text(font, Component.literal(I18n.get("buyer.offers_count", trades.size())), px + W / 2 - 5, py + H - 18, 0xFFFFFFFF);
+            ctx.drawString(font, Component.literal(I18n.get("buyer.offers_count", trades.size())), px + W / 2 - 5, py + H - 18, 0xFFFFFFFF);
         }
-        super.extractRenderState(ctx, mx, my, delta);
+        super.render(ctx, mx, my, delta);
 
         // Tooltip rendering for hovered item slots
         for (int ti = scrollOffset; ti < Math.min(scrollOffset + VISIBLE_TRADES, trades.size()); ti++) {

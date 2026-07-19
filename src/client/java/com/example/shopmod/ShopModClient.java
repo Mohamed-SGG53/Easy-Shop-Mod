@@ -4,6 +4,7 @@ import com.example.shopmod.client.ClientPacketHandler;
 import com.example.shopmod.client.SkinHelper;
 import com.example.shopmod.data.I18n;
 import com.example.shopmod.network.ModPackets;
+import com.example.shopmod.screen.RecoveryScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -69,11 +70,35 @@ public class ShopModClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new ModPackets.UploadSkinPayload(most, least, mySkin));
                             System.out.println("[ShopMod] Uploaded own skin to server (" + mySkin.length + " bytes)");
                         } else {
-                            // No skin found - show warning directly on client
+                            // No skin found - show warning with clickable path (must run on main thread)
                             if (mc.player != null) {
-                                mc.execute(() -> mc.player.sendSystemMessage(
-                                    net.minecraft.network.chat.Component.literal(I18n.get("msg.skin_not_found"))
-                                ));
+                                String msg = I18n.get("msg.skin_not_found");
+                                String[] parts = msg.split("\\{path\\}", 2);
+
+                                java.nio.file.Path skinDir = mc.gameDirectory.toPath()
+                                    .resolve("config").resolve("Easy Shop Mod").resolve("My Skin");
+                                String absolutePath = skinDir.toAbsolutePath().toString();
+                                String displayPath = "config/Easy Shop Mod/My Skin/";
+
+                                net.minecraft.network.chat.MutableComponent pathComp =
+                                    net.minecraft.network.chat.Component.literal("[" + displayPath + "]")
+                                    .setStyle(net.minecraft.network.chat.Style.EMPTY
+                                        .withColor(net.minecraft.network.chat.TextColor.fromLegacyFormat(
+                                            net.minecraft.ChatFormatting.YELLOW))
+                                        .withUnderlined(true)
+                                        .withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenFile(absolutePath))
+                                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(
+                                            net.minecraft.network.chat.Component.literal(
+                                                I18n.get("skin.click_to_open")))));
+
+                                net.minecraft.network.chat.MutableComponent fullMsg =
+                                    net.minecraft.network.chat.Component.literal(parts[0]);
+                                fullMsg.append(pathComp);
+                                if (parts.length > 1) {
+                                    fullMsg.append(net.minecraft.network.chat.Component.literal(parts[1]));
+                                }
+
+                                mc.execute(() -> mc.player.displayClientMessage(fullMsg, false));
                             }
                             System.out.println("[ShopMod] No skin PNG found in My Skin folder");
                         }

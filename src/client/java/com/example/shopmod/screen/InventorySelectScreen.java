@@ -7,7 +7,7 @@ import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -72,50 +72,50 @@ public class InventorySelectScreen extends Screen {
         }).bounds(specialSlotX + SLOT_SIZE + 4, specialSlotY + SLOT_SIZE + 4, SLOT_SIZE, SLOT_SIZE).build());
     }
 
-    private static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
+    private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x, y, x + w, y + 1, color);
         ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color);
         ctx.fill(x + w - 1, y, x + w, y + h, color);
     }
 
-    private void drawSlot(GuiGraphicsExtractor ctx, int x, int y, ItemStack stack, boolean hovered) {
+    private void drawSlot(GuiGraphics ctx, int x, int y, ItemStack stack, boolean hovered) {
         ctx.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, hovered ? 0xFF5B5B5B : 0xFF3B3B3B);
         drawBorder(ctx, x, y, SLOT_SIZE, SLOT_SIZE, hovered ? 0xFFAAAAAA : 0xFF6B6B6B);
         if (!stack.isEmpty()) {
-            ctx.item(stack, x + 1, y + 1);
+            ctx.renderItem(stack, x + 1, y + 1);
             if (stack.getCount() > 1) {
                 String countStr = String.valueOf(stack.getCount());
                 int w = font.width(countStr);
-                ctx.text(font, Component.literal(countStr), x + 19 - w, y + 11, 0xFFFFFFFF);
+                ctx.drawString(font, Component.literal(countStr), x + 19 - w, y + 11, 0xFFFFFFFF);
             }
         }
     }
 
-    private void drawCursorStack(GuiGraphicsExtractor ctx, int mx, int my) {
+    private void drawCursorStack(GuiGraphics ctx, int mx, int my) {
         if (!cursorStack.isEmpty()) {
-            ctx.item(cursorStack, mx - 8, my - 8);
+            ctx.renderItem(cursorStack, mx - 8, my - 8);
             if (cursorStack.getCount() > 1) {
                 String countStr = String.valueOf(cursorStack.getCount());
                 int w = font.width(countStr);
-                ctx.text(font, Component.literal(countStr), mx - 8 + 19 - w, my - 8 + 11, 0xFFFFFFFF);
+                ctx.drawString(font, Component.literal(countStr), mx - 8 + 19 - w, my - 8 + 11, 0xFFFFFFFF);
             }
         }
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         ctx.fill(0, 0, width, height, 0x88000000);
         int px = (width - W) / 2, py = (height - H) / 2;
 
         ctx.fill(px, py, px + W, py + H, 0xF0101010);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 24, 0xFF3D2810);
-        ctx.centeredText(font, Component.literal(I18n.get("select.title") + " - " + shopName), px + W / 2, py + 8, 0xFFFFFFFF);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("select.title") + " - " + shopName), px + W / 2, py + 8, 0xFFFFFFFF);
 
         int invX = px + 12;
         int invY = py + 42;
-        ctx.text(font, Component.literal(I18n.get("select.inventory")), invX, invY - 10, 0xFFAAAAAA);
+        ctx.drawString(font, Component.literal(I18n.get("select.inventory")), invX, invY - 10, 0xFFAAAAAA);
 
         for (int row = 0; row < INV_ROWS; row++) {
             for (int col = 0; col < INV_COLS; col++) {
@@ -128,7 +128,7 @@ public class InventorySelectScreen extends Screen {
 
         int hotbarY = invY + INV_ROWS * SLOT_SIZE + 4;
         ctx.fill(invX, hotbarY, invX + INV_COLS * SLOT_SIZE, hotbarY + 1, 0xFF555555);
-        ctx.text(font, Component.literal(I18n.get("select.hotbar")), invX, hotbarY + 4, 0xFFAAAAAA);
+        ctx.drawString(font, Component.literal(I18n.get("select.hotbar")), invX, hotbarY + 4, 0xFFAAAAAA);
         hotbarY += 14;
         for (int col = 0; col < INV_COLS; col++) {
             int sx = invX + col * SLOT_SIZE;
@@ -138,23 +138,23 @@ public class InventorySelectScreen extends Screen {
 
         int specialX = invX + INV_COLS * SLOT_SIZE + 20;
         int specialY = py + 70;
-        ctx.centeredText(font, Component.literal(I18n.get("select.sell")), specialX + SLOT_SIZE / 2, specialY - 10, 0xFF55FF55);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("select.sell")), specialX + SLOT_SIZE / 2, specialY - 10, 0xFF55FF55);
 
         boolean specialHov = isOverSlot(mx, my, specialX, specialY);
         ctx.fill(specialX, specialY, specialX + SLOT_SIZE, specialY + SLOT_SIZE, specialHov ? 0xFF4A6B4A : 0xFF3B5B3B);
         drawBorder(ctx, specialX, specialY, SLOT_SIZE, SLOT_SIZE, selectedStack.isEmpty() ? 0xFF888888 : 0xFF00FF00);
         if (!selectedStack.isEmpty()) {
-            ctx.item(selectedStack, specialX + 1, specialY + 1);
+            ctx.renderItem(selectedStack, specialX + 1, specialY + 1);
             if (selectedStack.getCount() > 1) {
                 String countStr = String.valueOf(selectedStack.getCount());
                 int w = font.width(countStr);
-                ctx.text(font, Component.literal(countStr), specialX + 19 - w, specialY + 11, 0xFFFFFFFF);
+                ctx.drawString(font, Component.literal(countStr), specialX + 19 - w, specialY + 11, 0xFFFFFFFF);
             }
         }
 
         drawCursorStack(ctx, mx, my);
-        ctx.centeredText(font, Component.literal(I18n.get("select.hint")), px + W / 2, py + H - 14, 0xFF888888);
-        super.extractRenderState(ctx, mx, my, delta);
+        ctx.drawCenteredString(font, Component.literal(I18n.get("select.hint")), px + W / 2, py + H - 14, 0xFF888888);
+        super.render(ctx, mx, my, delta);
     }
 
     private boolean isOverSlot(int mx, int my, int sx, int sy) {
