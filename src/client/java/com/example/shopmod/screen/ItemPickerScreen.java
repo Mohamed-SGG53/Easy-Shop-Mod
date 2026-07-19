@@ -41,7 +41,7 @@ public class ItemPickerScreen extends Screen {
         "minecraft:command_block_minecart","minecraft:structure_block","minecraft:structure_void",
         "minecraft:barrier","minecraft:light","minecraft:jigsaw","minecraft:debug_stick",
         "minecraft:test_block","minecraft:test_instance_block","minecraft:end_portal_frame","minecraft:bedrock",
-        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow"
+        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow", "minecraft:air"
     );
 
     /**

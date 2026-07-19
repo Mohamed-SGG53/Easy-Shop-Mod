@@ -100,9 +100,9 @@ public class I18n {
         EN.put("shoplist.offer_plural", "(%d Offers)");
 
         EN.put("msg.shop_created", "\u00a7aShop created: \u00a7e%s's Shop \u00a7a\u00a7r");
-        EN.put("msg.shop_exists", "\u00a7cYou already have a shop! Use \u00a7e/close_shop \u00a7cto remove it first.");
+        EN.put("msg.shop_exists", "\u00a7cYou already have a shop! Use \u00a7e/shop close \u00a7cto remove it first.");
         EN.put("msg.shop_closed", "\u00a7aShop closed successfully! \u00a77(Your items are saved)");
-        EN.put("msg.shop_not_found", "\u00a7cYour shop NPC was not found. Use \u00a7a/create_shop \u00a7cto create it again. \u00a77Your offers are still saved.");
+        EN.put("msg.shop_not_found", "\u00a7cYour shop NPC was not found. Use \u00a7a/shop create \u00a7cto create it again. \u00a77Your offers are still saved.");
         EN.put("msg.shop_npc_not_found", "\u00a7cYou don't have a shop!");
         EN.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7e%s\u00a7c's Shop was destroyed by \u00a7e%s\u00a7c! The offers are still saved.");
         EN.put("msg.shop_not_exists", "\u00a7cShop \u00a7e%s \u00a7cnot found!");
@@ -123,7 +123,8 @@ public class I18n {
         EN.put("msg.trade_success", "\u00a7aTrade complete! You got \u00a7f%s");
         EN.put("msg.trade_item_taken", "\u00a7aTook \u00a7f%s \u00a7ax%d");
         EN.put("msg.inventory_full", "\u00a7cInventory is full!");
-        EN.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cYou have not placed your skin PNG in \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Your face will appear as default in the Shops List until you add it.");
+        EN.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cYou have not placed your skin PNG in {path}\u00a7c. Your face will appear as default in the Shops List until you add it.");
+        EN.put("skin.click_to_open", "\u00a7eClick to open folder");
 
         EN.put("storage.title", "Storage - %s");
         EN.put("storage.page", "Page %d/%d  |  %d items");
@@ -154,6 +155,20 @@ public class I18n {
         EN.put("select.hotbar", "Hotbar");
         EN.put("select.sell", "Sell");
         EN.put("select.hint", "Left: Pick/Place all | Right: Split/Place one");
+
+        EN.put("msg.target_has_shop", "\u00a7cThis player already has a shop! Cannot own more than one shop.");
+        EN.put("msg.shop_deleted_notify", "\u00a7cYour shop has been deleted. Type \u00a7e/shop recover \u00a7cto retrieve your items.");
+        EN.put("msg.no_recovery_items", "\u00a7cNo items to recover.");
+        EN.put("msg.all_recovered", "\u00a7aAll your items have been recovered!");
+        EN.put("msg.recovery_inventory_full", "\u00a7cInventory is full! Make space and try again.");
+        EN.put("msg.admin_only", "\u00a7cThis command is for administrators only!");
+        EN.put("msg.transfer_success", "\u00a7aShop ownership transferred successfully!");
+        EN.put("msg.repair_success", "\u00a7aShop ownership repaired successfully!");
+        EN.put("msg.shop_not_found_admin", "\u00a7cShop not found for player: \u00a7e%s");
+        EN.put("msg.no_shops_without_uuid", "\u00a77No shops found without UUID (all are already linked).");
+        EN.put("msg.player_not_found", "\u00a7cPlayer not found: \u00a7e%s");
+        EN.put("msg.no_shop_to_transfer", "\u00a7cPlayer \u00a7e%s \u00a7cdoes not have a shop!");
+        EN.put("recovery.title", "Item Recovery");
     }
 
     // ==================== Arabic (ar_sa) ====================
@@ -195,9 +210,9 @@ public class I18n {
         AR.put("shoplist.offer_plural", "(%d عروض)");
 
         AR.put("msg.shop_created", "\u00a7aتم إنشاء المتجر: \u00a7eمتجر %s \u00a7a\u00a7r");
-        AR.put("msg.shop_exists", "\u00a7cلديك متجر بالفعل! استخدم \u00a7e/close_shop \u00a7cلإزالته أولاً.");
+        AR.put("msg.shop_exists", "\u00a7cلديك متجر بالفعل! استخدم \u00a7e/shop close \u00a7cلإزالته أولاً.");
         AR.put("msg.shop_closed", "\u00a7aتم إغلاق المتجر بنجاح! \u00a77(تم حفظ عناصرك)");
-        AR.put("msg.shop_not_found", "\u00a7cلم يتم العثور على NPC المتجر. استخدم \u00a7a/create_shop \u00a7cلإنشائه مرة أخرى. \u00a77عروضك محفوظة.");
+        AR.put("msg.shop_not_found", "\u00a7cلم يتم العثور على NPC المتجر. استخدم \u00a7a/shop create \u00a7cلإنشائه مرة أخرى. \u00a77عروضك محفوظة.");
         AR.put("msg.shop_npc_not_found", "\u00a7cليس لديك متجر!");
         AR.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7eمتجر %s\u00a7c تم تدميره بواسطة \u00a7e%s\u00a7c! العروض محفوظة.");
         AR.put("msg.shop_not_exists", "\u00a7cالمتجر \u00a7e%s \u00a7cغير موجود!");
@@ -218,7 +233,8 @@ public class I18n {
         AR.put("msg.trade_success", "\u00a7aتمت الصفقة بنجاح! حصلت على \u00a7f%s");
         AR.put("msg.trade_item_taken", "\u00a7aتم أخذ \u00a7f%s \u00a7ax%d");
         AR.put("msg.inventory_full", "\u00a7cالمخزون ممتلئ!");
-        AR.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cلم تقم بوضع صورة السكن الخاصة بك PNG في \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. سيظهر وجهك بشكل افتراضي في قائمة المتاجر حتى تقوم بإضافتها.");
+        AR.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cلم تقم بوضع صورة السكن الخاصة بك PNG في {path}\u00a7c. سيظهر وجهك بشكل افتراضي في قائمة المتاجر حتى تقوم بإضافتها.");
+        AR.put("skin.click_to_open", "\u00a7eاضغط لفتح المجلد");
 
         AR.put("storage.title", "مخزن - %s");
         AR.put("storage.page", "صفحة %d/%d | %d عنصر");
@@ -249,6 +265,20 @@ public class I18n {
         AR.put("select.hotbar", "شريط الأدوات");
         AR.put("select.sell", "بيع");
         AR.put("select.hint", "يسار: اختيار/وضع الكل | يمين: تقسيم/وضع واحد");
+
+        AR.put("msg.target_has_shop", "\u00a7cهذا اللاعب يمتلك متجر بالفعل! لا يمكن امتلاك أكثر من متجر.");
+        AR.put("msg.shop_deleted_notify", "\u00a7cتم حذف متجرك. اكتب \u00a7e/shop recover \u00a7cلاسترداد عناصرك.");
+        AR.put("msg.no_recovery_items", "\u00a7cلا توجد عناصر لاستردادها.");
+        AR.put("msg.all_recovered", "\u00a7aتم استرداد كل عناصرك!");
+        AR.put("msg.recovery_inventory_full", "\u00a7cالمخزون ممتلئ! اعمل مكان وجرب تاني.");
+        AR.put("msg.admin_only", "\u00a7cهذا الأمر للمشرفين فقط!");
+        AR.put("msg.transfer_success", "\u00a7aتم تحويل ملكية المتجر بنجاح!");
+        AR.put("msg.repair_success", "\u00a7aتم إصلاح ملكية المتجر بنجاح!");
+        AR.put("msg.shop_not_found_admin", "\u00a7cلم يتم العثور على متجر للاعب: \u00a7e%s");
+        AR.put("msg.no_shops_without_uuid", "\u00a77لا توجد متاجر بدون UUID (جميعها مربوطة بالفعل).");
+        AR.put("msg.player_not_found", "\u00a7cلم يتم العثور على اللاعب: \u00a7e%s");
+        AR.put("msg.no_shop_to_transfer", "\u00a7cاللاعب \u00a7e%s \u00a7cلا يمتلك متجر!");
+        AR.put("recovery.title", "استرداد العناصر");
     }
 
     // ==================== Chinese Simplified (zh_cn) ====================
@@ -290,9 +320,9 @@ public class I18n {
         ZH.put("shoplist.offer_plural", "(%d 个商品)");
 
         ZH.put("msg.shop_created", "\u00a7a商店已创建: \u00a7e%s的商店 \u00a7a\u00a7r");
-        ZH.put("msg.shop_exists", "\u00a7c你已经有一个商店了! 使用 \u00a7e/close_shop \u00a7c先移除它.");
+        ZH.put("msg.shop_exists", "\u00a7c你已经有一个商店了! 使用 \u00a7e/shop close \u00a7c先移除它.");
         ZH.put("msg.shop_closed", "\u00a7a商店已成功关闭! \u00a77(你的物品已保存)");
-        ZH.put("msg.shop_not_found", "\u00a7c未找到商店NPC. 使用 \u00a7a/create_shop \u00a7c重新创建. \u00a77商品仍然保存着.");
+        ZH.put("msg.shop_not_found", "\u00a7c未找到商店NPC. 使用 \u00a7a/shop create \u00a7c重新创建. \u00a77商品仍然保存着.");
         ZH.put("msg.shop_npc_not_found", "\u00a7c你没有商店!");
         ZH.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7e%s\u00a7c的商店被\u00a7e%s\u00a7c摧毁了! 商品仍然保存着.");
         ZH.put("msg.shop_not_exists", "\u00a7c商店 \u00a7e%s \u00a7c未找到!");
@@ -313,7 +343,8 @@ public class I18n {
         ZH.put("msg.trade_success", "\u00a7a交易完成! 你获得了 \u00a7f%s");
         ZH.put("msg.trade_item_taken", "\u00a7a取走了 \u00a7f%s \u00a7ax%d");
         ZH.put("msg.inventory_full", "\u00a7c背包已满!");
-        ZH.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c你还没有将皮肤 PNG 图片放入 \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c。在你的商店列表中，你的头像将显示为默认头像，直到你添加为止。");
+        ZH.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c你还没有将皮肤 PNG 图片放入 {path}\u00a7c。在你的商店列表中，你的头像将显示为默认头像，直到你添加为止。");
+        ZH.put("skin.click_to_open", "\u00a7e点击打开文件夹");
 
         ZH.put("storage.title", "仓库 - %s");
         ZH.put("storage.page", "第 %d/%d 页 | %d 个物品");
@@ -344,6 +375,20 @@ public class I18n {
         ZH.put("select.hotbar", "快捷栏");
         ZH.put("select.sell", "出售");
         ZH.put("select.hint", "左键: 拿取/放置全部 | 右键: 分割/放置一个");
+
+        ZH.put("msg.target_has_shop", "\u00a7c该玩家已经有一个商店了！无法拥有多个商店。");
+        ZH.put("msg.shop_deleted_notify", "\u00a7c你的商店已被删除。输入 \u00a7e/shop recover \u00a7c来取回你的物品。");
+        ZH.put("msg.no_recovery_items", "\u00a7c没有可恢复的物品。");
+        ZH.put("msg.all_recovered", "\u00a7a你所有的物品都已恢复！");
+        ZH.put("msg.recovery_inventory_full", "\u00a7c背包已满！请腾出空间后重试。");
+        ZH.put("msg.admin_only", "\u00a7c此命令仅限管理员使用！");
+        ZH.put("msg.transfer_success", "\u00a7a商店所有权已成功转移！");
+        ZH.put("msg.repair_success", "\u00a7a商店所有权已成功修复！");
+        ZH.put("msg.shop_not_found_admin", "\u00a7c未找到玩家的商店: \u00a7e%s");
+        ZH.put("msg.no_shops_without_uuid", "\u00a77没有找到缺少UUID的商店（所有商店已关联）。");
+        ZH.put("msg.player_not_found", "\u00a7c未找到玩家: \u00a7e%s");
+        ZH.put("msg.no_shop_to_transfer", "\u00a7c玩家 \u00a7e%s \u00a7c没有商店！");
+        ZH.put("recovery.title", "物品恢复");
     }
 
     // ==================== Japanese (ja_jp) ====================
@@ -385,9 +430,9 @@ public class I18n {
         JA.put("shoplist.offer_plural", "(%d 商品)");
 
         JA.put("msg.shop_created", "\u00a7aショップを作成しました: \u00a7e%sのショップ \u00a7a\u00a7r");
-        JA.put("msg.shop_exists", "\u00a7cすでにショップがあります! \u00a7e/close_shop \u00a7cを先に使用してください.");
+        JA.put("msg.shop_exists", "\u00a7cすでにショップがあります! \u00a7e/shop close \u00a7cを先に使用してください.");
         JA.put("msg.shop_closed", "\u00a7aショップを正常に閉じました! \u00a77(アイテムは保存されています)");
-        JA.put("msg.shop_not_found", "\u00a7cショップNPCが見つかりません. \u00a7a/create_shop \u00a7cで再作成してください. \u00a77商品は保存されています.");
+        JA.put("msg.shop_not_found", "\u00a7cショップNPCが見つかりません. \u00a7a/shop create \u00a7cで再作成してください. \u00a77商品は保存されています.");
         JA.put("msg.shop_npc_not_found", "\u00a7cショップがありません!");
         JA.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7e%s\u00a7cのショップが\u00a7e%s\u00a7cによって破壊されました! 商品は保存されています.");
         JA.put("msg.shop_not_exists", "\u00a7cショップ \u00a7e%s \u00a7cが見つかりません!");
@@ -408,7 +453,8 @@ public class I18n {
         JA.put("msg.trade_success", "\u00a7a取引完了! \u00a7f%sを入手しました");
         JA.put("msg.trade_item_taken", "\u00a7a\u00a7f%s \u00a7ax%dを取り出しました");
         JA.put("msg.inventory_full", "\u00a7cインベントリが満杯です!");
-        JA.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c\u30b9\u30ad\u30f3PNG\u753b\u50cf\u3092 \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c \u306b\u914d\u7f6e\u3057\u3066\u3044\u307e\u305b\u3093\u3002\u8ffd\u52a0\u3059\u308b\u307e\u3067\u3001\u30b7\u30e7\u30c3\u30d7\u30ea\u30b9\u30c8\u3067\u306f\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u984d\u304c\u8868\u793a\u3055\u308c\u307e\u3059\u3002");
+        JA.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c\u30b9\u30ad\u30f3PNG\u753b\u50cf\u3092 {path}\u00a7c \u306b\u914d\u7f6e\u3057\u3066\u3044\u307e\u305b\u3093\u3002\u8ffd\u52a0\u3059\u308b\u307e\u3067\u3001\u30b7\u30e7\u30c3\u30d7\u30ea\u30b9\u30c8\u3067\u306f\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u984d\u304c\u8868\u793a\u3055\u308c\u307e\u3059\u3002");
+        JA.put("skin.click_to_open", "\u00a7eフォルダを開くにはクリック");
 
         JA.put("storage.title", "ストレージ - %s");
         JA.put("storage.page", "ページ %d/%d | %d 個のアイテム");
@@ -439,6 +485,20 @@ public class I18n {
         JA.put("select.hotbar", "ホットバー");
         JA.put("select.sell", "販売");
         JA.put("select.hint", "左クリック: 全て取得/配置 | 右クリック: 分割/1つ配置");
+
+        JA.put("msg.target_has_shop", "\u00a7cこのプレイヤーはすでにショップを持っています！複数のショップは所有できません。");
+        JA.put("msg.shop_deleted_notify", "\u00a7cあなたのショップは削除されました。アイテムを取り戻すには \u00a7e/shop recover \u00a7cを入力してください。");
+        JA.put("msg.no_recovery_items", "\u00a7c回復可能なアイテムがありません。");
+        JA.put("msg.all_recovered", "\u00a7aすべてのアイテムが回復されました！");
+        JA.put("msg.recovery_inventory_full", "\u00a7cインベントリが満杯です！スペースを空けて再試行してください。");
+        JA.put("msg.admin_only", "\u00a7cこのコマンドは管理者のみ使用可能です！");
+        JA.put("msg.transfer_success", "\u00a7aショップの所有権が正常に移転されました！");
+        JA.put("msg.repair_success", "\u00a7aショップの所有権が正常に修復されました！");
+        JA.put("msg.shop_not_found_admin", "\u00a7cプレイヤーのショップが見つかりません: \u00a7e%s");
+        JA.put("msg.no_shops_without_uuid", "\u00a77UUIDがないショップは見つかりません（すべて既にリンク済みです）。");
+        JA.put("msg.player_not_found", "\u00a7cプレイヤーが見つかりません: \u00a7e%s");
+        JA.put("msg.no_shop_to_transfer", "\u00a7cプレイヤー \u00a7e%s \u00a7cはショップを持っていません！");
+        JA.put("recovery.title", "アイテム回復");
     }
 
     // ==================== Korean (ko_kr) ====================
@@ -480,9 +540,9 @@ public class I18n {
         KO.put("shoplist.offer_plural", "(%d개 상품)");
 
         KO.put("msg.shop_created", "\u00a7a상점이 생성되었습니다: \u00a7e%s의 상점 \u00a7a\u00a7r");
-        KO.put("msg.shop_exists", "\u00a7c이미 상점이 있습니다! \u00a7e/close_shop \u00a7c을 사용하여 먼저 제거하세요.");
+        KO.put("msg.shop_exists", "\u00a7c이미 상점이 있습니다! \u00a7e/shop close \u00a7c을 사용하여 먼저 제거하세요.");
         KO.put("msg.shop_closed", "\u00a7a상점이 성공적으로 닫혔습니다! \u00a77(아이템이 저장되었습니다)");
-        KO.put("msg.shop_not_found", "\u00a7c상점 NPC를 찾을 수 없습니다. \u00a7a/create_shop \u00a7c을 사용하여 다시 만드세요. \u00a77상품은 저장되어 있습니다.");
+        KO.put("msg.shop_not_found", "\u00a7c상점 NPC를 찾을 수 없습니다. \u00a7a/shop create \u00a7c을 사용하여 다시 만드세요. \u00a77상품은 저장되어 있습니다.");
         KO.put("msg.shop_npc_not_found", "\u00a7c상점이 없습니다!");
         KO.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7e%s\u00a7c의 상점이 \u00a7e%s\u00a7c에 의해 파괴되었습니다! 상품은 저장되어 있습니다.");
         KO.put("msg.shop_not_exists", "\u00a7c상점 \u00a7e%s \u00a7c을 찾을 수 없습니다!");
@@ -503,7 +563,8 @@ public class I18n {
         KO.put("msg.trade_success", "\u00a7a거래 완료! \u00a7f%s을(를) 획득했습니다");
         KO.put("msg.trade_item_taken", "\u00a7a\u00a7f%s \u00a7ax%d을(를) 꺼냈습니다");
         KO.put("msg.inventory_full", "\u00a7c인벤토리가 가득 찼습니다!");
-        KO.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c\uac00\uc774\uc2a4\ud0a8 PNG \uc774\ubbf8\uc9c0\ub97c \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c \uc5d0 \ub123\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \ucd94\uac00\ud560 \ub54c\uae4c\uc9c0 \uc0c1\uc810 \ubaa9\ub85d\uc5d0\uc11c \uae30\ubcf8 \ud504\ub85c\ud544 \uc774\ubbf8\uc9c0\uac00 \ud45c\uc2dc\ub429\ub2c8\ub2e4.");
+        KO.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7c\uac00\uc774\uc2a4\ud0a8 PNG \uc774\ubbf8\uc9c0\ub97c {path}\u00a7c \uc5d0 \ub123\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \ucd94\uac00\ud560 \ub54c\uae4c\uc9c0 \uc0c1\uc810 \ubaa9\ub85d\uc5d0\uc11c \uae30\ubcf8 \ud504\ub85c\ud544 \uc774\ubbf8\uc9c0\uac00 \ud45c\uc2dc\ub429\ub2c8\ub2e4.");
+        KO.put("skin.click_to_open", "\u00a7e폴더를 열려면 클릭");
 
         KO.put("storage.title", "보관함 - %s");
         KO.put("storage.page", "%d/%d 페이지 | %d개 아이템");
@@ -534,6 +595,20 @@ public class I18n {
         KO.put("select.hotbar", "핫바");
         KO.put("select.sell", "판매");
         KO.put("select.hint", "좌클릭: 전체 선택/배치 | 우클릭: 분할/1개 배치");
+
+        KO.put("msg.target_has_shop", "\u00a7c이 플레이어는 이미 상점을 가지고 있습니다! 둘 이상의 상점을 소유할 수 없습니다.");
+        KO.put("msg.shop_deleted_notify", "\u00a7c당신의 상점이 삭제되었습니다. 아이템을 회복하려면 \u00a7e/shop recover \u00a7c를 입력하세요.");
+        KO.put("msg.no_recovery_items", "\u00a7c복구할 아이템이 없습니다.");
+        KO.put("msg.all_recovered", "\u00a7a모든 아이템이 복구되었습니다!");
+        KO.put("msg.recovery_inventory_full", "\u00a7c인벤토리가 가득 찼습니다! 공간을 만들고 다시 시도하세요.");
+        KO.put("msg.admin_only", "\u00a7c이 명령어는 관리자만 사용할 수 있습니다!");
+        KO.put("msg.transfer_success", "\u00a7a상점 소유권이 성공적으로 이전되었습니다!");
+        KO.put("msg.repair_success", "\u00a7a상점 소유권이 성공적으로 복구되었습니다!");
+        KO.put("msg.shop_not_found_admin", "\u00a7c플레이어의 상점을 찾을 수 없습니다: \u00a7e%s");
+        KO.put("msg.no_shops_without_uuid", "\u00a77UUID가 없는 상점이 없습니다 (모두 이미 연결되어 있습니다).");
+        KO.put("msg.player_not_found", "\u00a7c플레이어를 찾을 수 없습니다: \u00a7e%s");
+        KO.put("msg.no_shop_to_transfer", "\u00a7c플레이어 \u00a7e%s \u00a7c는 상점이 없습니다!");
+        KO.put("recovery.title", "아이템 복구");
     }
 
     // ==================== Spanish (es_es) ====================
@@ -575,9 +650,9 @@ public class I18n {
         ES.put("shoplist.offer_plural", "(%d ofertas)");
 
         ES.put("msg.shop_created", "\u00a7aTienda creada: \u00a7eTienda de %s \u00a7a\u00a7r");
-        ES.put("msg.shop_exists", "\u00a7cYa tienes una tienda! Usa \u00a7e/close_shop \u00a7cpara eliminarla primero.");
+        ES.put("msg.shop_exists", "\u00a7cYa tienes una tienda! Usa \u00a7e/shop close \u00a7cpara eliminarla primero.");
         ES.put("msg.shop_closed", "\u00a7aTienda cerrada con exito! \u00a77(Tus articulos estan guardados)");
-        ES.put("msg.shop_not_found", "\u00a7cNo se encontro el NPC de tu tienda. Usa \u00a7a/create_shop \u00a7cpara crearla de nuevo. \u00a77Tus ofertas siguen guardadas.");
+        ES.put("msg.shop_not_found", "\u00a7cNo se encontro el NPC de tu tienda. Usa \u00a7a/shop create \u00a7cpara crearla de nuevo. \u00a77Tus ofertas siguen guardadas.");
         ES.put("msg.shop_npc_not_found", "\u00a7cNo tienes una tienda!");
         ES.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7eLa tienda de %s\u00a7c fue destruida por \u00a7e%s\u00a7c! Las ofertas siguen guardadas.");
         ES.put("msg.shop_not_exists", "\u00a7cTienda \u00a7e%s \u00a7cno encontrada!");
@@ -598,7 +673,8 @@ public class I18n {
         ES.put("msg.trade_success", "\u00a7aIntercambio completado! Obtuviste \u00a7f%s");
         ES.put("msg.trade_item_taken", "\u00a7aTomaste \u00a7f%s \u00a7ax%d");
         ES.put("msg.inventory_full", "\u00a7cEl inventario esta lleno!");
-        ES.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cNo has colocado tu skin PNG en \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Tu cara aparecera como predeterminada en la Lista de Tiendas hasta que la agregues.");
+        ES.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cNo has colocado tu skin PNG en {path}\u00a7c. Tu cara aparecera como predeterminada en la Lista de Tiendas hasta que la agregues.");
+        ES.put("skin.click_to_open", "\u00a7eClic para abrir carpeta");
 
         ES.put("storage.title", "Almacen - %s");
         ES.put("storage.page", "Pagina %d/%d | %d articulos");
@@ -629,6 +705,20 @@ public class I18n {
         ES.put("select.hotbar", "Barra Rapida");
         ES.put("select.sell", "Vender");
         ES.put("select.hint", "Izquierdo: Tomar/Colocar todo | Derecho: Dividir/Colocar uno");
+
+        ES.put("msg.target_has_shop", "\u00a7cEste jugador ya tiene una tienda! No puede tener mas de una.");
+        ES.put("msg.shop_deleted_notify", "\u00a7cTu tienda ha sido eliminada. Escribe \u00a7e/shop recover \u00a7cpara recuperar tus articulos.");
+        ES.put("msg.no_recovery_items", "\u00a7cNo hay articulos para recuperar.");
+        ES.put("msg.all_recovered", "\u00a7aTodos tus articulos han sido recuperados!");
+        ES.put("msg.recovery_inventory_full", "\u00a7cEl inventario esta lleno! Haz espacio e intenta de nuevo.");
+        ES.put("msg.admin_only", "\u00a7cEste comando es solo para administradores!");
+        ES.put("msg.transfer_success", "\u00a7aPropiedad de la tienda transferida con exito!");
+        ES.put("msg.repair_success", "\u00a7aPropiedad de la tienda reparada con exito!");
+        ES.put("msg.shop_not_found_admin", "\u00a7cTienda no encontrada para el jugador: \u00a7e%s");
+        ES.put("msg.no_shops_without_uuid", "\u00a77No se encontraron tiendas sin UUID (todas ya estan vinculadas).");
+        ES.put("msg.player_not_found", "\u00a7cJugador no encontrado: \u00a7e%s");
+        ES.put("msg.no_shop_to_transfer", "\u00a7cEl jugador \u00a7e%s \u00a7cno tiene tienda!");
+        ES.put("recovery.title", "Recuperacion de Articulos");
     }
 
     // ==================== Portuguese Brazil (pt_br) ====================
@@ -670,9 +760,9 @@ public class I18n {
         PT.put("shoplist.offer_plural", "(%d ofertas)");
 
         PT.put("msg.shop_created", "\u00a7aLoja criada: \u00a7eLoja de %s \u00a7a\u00a7r");
-        PT.put("msg.shop_exists", "\u00a7cVoce ja tem uma loja! Use \u00a7e/close_shop \u00a7cpara remove-la primeiro.");
+        PT.put("msg.shop_exists", "\u00a7cVoce ja tem uma loja! Use \u00a7e/shop close \u00a7cpara remove-la primeiro.");
         PT.put("msg.shop_closed", "\u00a7aLoja fechada com sucesso! \u00a77(Seus itens foram salvos)");
-        PT.put("msg.shop_not_found", "\u00a7cO NPC da sua loja nao foi encontrado. Use \u00a7a/create_shop \u00a7cpara cria-la novamente. \u00a77Suas ofertas ainda estao salvas.");
+        PT.put("msg.shop_not_found", "\u00a7cO NPC da sua loja nao foi encontrado. Use \u00a7a/shop create \u00a7cpara cria-la novamente. \u00a77Suas ofertas ainda estao salvas.");
         PT.put("msg.shop_npc_not_found", "\u00a7cVoce nao tem uma loja!");
         PT.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7eA loja de %s\u00a7c foi destruida por \u00a7e%s\u00a7c! As ofertas ainda estao salvas.");
         PT.put("msg.shop_not_exists", "\u00a7cLoja \u00a7e%s \u00a7cnao encontrada!");
@@ -693,7 +783,8 @@ public class I18n {
         PT.put("msg.trade_success", "\u00a7aTroca concluida! Voce obteve \u00a7f%s");
         PT.put("msg.trade_item_taken", "\u00a7aPegou \u00a7f%s \u00a7ax%d");
         PT.put("msg.inventory_full", "\u00a7cO inventario esta cheio!");
-        PT.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVoce nao colocou sua skin PNG em \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Seu rosto aparecera como padrao na Lista de Lojas ate voce adiciona-la.");
+        PT.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVoce nao colocou sua skin PNG em {path}\u00a7c. Seu rosto aparecera como padrao na Lista de Lojas ate voce adiciona-la.");
+        PT.put("skin.click_to_open", "\u00a7eClique para abrir pasta");
 
         PT.put("storage.title", "Armazenamento - %s");
         PT.put("storage.page", "Pagina %d/%d | %d itens");
@@ -724,6 +815,20 @@ public class I18n {
         PT.put("select.hotbar", "Barra Rapida");
         PT.put("select.sell", "Vender");
         PT.put("select.hint", "Esquerdo: Pegar/Colocar tudo | Direito: Dividir/Colocar um");
+
+        PT.put("msg.target_has_shop", "\u00a7cEste jogador ja tem uma loja! Nao pode ter mais de uma.");
+        PT.put("msg.shop_deleted_notify", "\u00a7cSua loja foi excluida. Digite \u00a7e/shop recover \u00a7cpara recuperar seus itens.");
+        PT.put("msg.no_recovery_items", "\u00a7cNenhum item para recuperar.");
+        PT.put("msg.all_recovered", "\u00a7aTodos os seus itens foram recuperados!");
+        PT.put("msg.recovery_inventory_full", "\u00a7cO inventario esta cheio! Faca espaco e tente novamente.");
+        PT.put("msg.admin_only", "\u00a7cEste comando e apenas para administradores!");
+        PT.put("msg.transfer_success", "\u00a7aPropriedade da loja transferida com sucesso!");
+        PT.put("msg.repair_success", "\u00a7aPropriedade da loja reparada com sucesso!");
+        PT.put("msg.shop_not_found_admin", "\u00a7cLoja nao encontrada para o jogador: \u00a7e%s");
+        PT.put("msg.no_shops_without_uuid", "\u00a77Nenhuma loja encontrada sem UUID (todas ja estao vinculadas).");
+        PT.put("msg.player_not_found", "\u00a7cJogador nao encontrado: \u00a7e%s");
+        PT.put("msg.no_shop_to_transfer", "\u00a7cO jogador \u00a7e%s \u00a7cnao tem loja!");
+        PT.put("recovery.title", "Recuperacao de Itens");
     }
 
     // ==================== Russian (ru_ru) ====================
@@ -765,9 +870,9 @@ public class I18n {
         RU.put("shoplist.offer_plural", "(%d tovara)");
 
         RU.put("msg.shop_created", "\u00a7aMagazin sozdan: \u00a7eMagazin %s \u00a7a\u00a7r");
-        RU.put("msg.shop_exists", "\u00a7cU vas uzhe est magazin! Ispolzuite \u00a7e/close_shop \u00a7cchtoby snachala udalit ego.");
+        RU.put("msg.shop_exists", "\u00a7cU vas uzhe est magazin! Ispolzuite \u00a7e/shop close \u00a7cchtoby snachala udalit ego.");
         RU.put("msg.shop_closed", "\u00a7aMagazin uspeshno zakryt! \u00a77(Vashi predmety sokhraneny)");
-        RU.put("msg.shop_not_found", "\u00a7cNPC vashego magazina ne naiden. Ispolzuite \u00a7a/create_shop \u00a7cchtoby sozdat ego snova. \u00a77Vashi tovary po-prezhnemu sokhraneny.");
+        RU.put("msg.shop_not_found", "\u00a7cNPC vashego magazina ne naiden. Ispolzuite \u00a7a/shop create \u00a7cchtoby sozdat ego snova. \u00a77Vashi tovary po-prezhnemu sokhraneny.");
         RU.put("msg.shop_npc_not_found", "\u00a7cU vas net magazina!");
         RU.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7eMagazin %s\u00a7c byl unichtozhen igrokom \u00a7e%s\u00a7c! Tovary po-prezhnemu sokhraneny.");
         RU.put("msg.shop_not_exists", "\u00a7cMagazin \u00a7e%s \u00a7cne naiden!");
@@ -788,7 +893,8 @@ public class I18n {
         RU.put("msg.trade_success", "\u00a7aObmen zavershen! Vy poluchili \u00a7f%s");
         RU.put("msg.trade_item_taken", "\u00a7aVzyato \u00a7f%s \u00a7ax%d");
         RU.put("msg.inventory_full", "\u00a7cInventar polon!");
-        RU.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVy ne pomestili svoy skin PNG v \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Vashe litso budet otobrazhat'sya po umolchaniyu v spiske magazinov, poka vy ego ne dobavite.");
+        RU.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVy ne pomestili svoy skin PNG v {path}\u00a7c. Vashe litso budet otobrazhat'sya po umolchaniyu v spiske magazinov, poka vy ego ne dobavite.");
+        RU.put("skin.click_to_open", "\u00a7eNazhmite dlya otkrytiya papki");
 
         RU.put("storage.title", "Khranilishche - %s");
         RU.put("storage.page", "Stranitsa %d/%d | %d predmetov");
@@ -819,6 +925,20 @@ public class I18n {
         RU.put("select.hotbar", "Bystraya panel");
         RU.put("select.sell", "Prodat");
         RU.put("select.hint", "Levyy: Vzyat/Polozhit vse | Pravyy: Razdelit/Polozhit odin");
+
+        RU.put("msg.target_has_shop", "\u00a7cU etogo igroka uzhe est' magazin! Nel'ya vladel' bolee chem odnim.");
+        RU.put("msg.shop_deleted_notify", "\u00a7cVash magazin byl udalen. Napisite \u00a7e/shop recover \u00a7cdlya vosstanovleniya predmetov.");
+        RU.put("msg.no_recovery_items", "\u00a7cNet predmetov dlya vosstanovleniya.");
+        RU.put("msg.all_recovered", "\u00a7aVse vashi predmety vosstanovleny!");
+        RU.put("msg.recovery_inventory_full", "\u00a7cInventar' polon! Oslobodite mesto i poprobujte snova.");
+        RU.put("msg.admin_only", "\u00a7cEta komanda tol'ko dlya administratorov!");
+        RU.put("msg.transfer_success", "\u00a7aSobstvennost' magazina uspeshno peredana!");
+        RU.put("msg.repair_success", "\u00a7aSobstvennost' magazina uspeshno vosstanovlena!");
+        RU.put("msg.shop_not_found_admin", "\u00a7cMagazin ne najden dlya igroka: \u00a7e%s");
+        RU.put("msg.no_shops_without_uuid", "\u00a77Magazinov bez UUID ne najdeno (vse uzhe svyazany).");
+        RU.put("msg.player_not_found", "\u00a7cIgrok ne najden: \u00a7e%s");
+        RU.put("msg.no_shop_to_transfer", "\u00a7cU igroka \u00a7e%s \u00a7cnet magazina!");
+        RU.put("recovery.title", "Vosstanovlenie predmetov");
     }
 
     // ==================== German (de_de) ====================
@@ -860,9 +980,9 @@ public class I18n {
         DE.put("shoplist.offer_plural", "(%d Angebote)");
 
         DE.put("msg.shop_created", "\u00a7aShop erstellt: \u00a7e%s's Shop \u00a7a\u00a7r");
-        DE.put("msg.shop_exists", "\u00a7cDu hast bereits einen Shop! Verwende \u00a7e/close_shop \u00a7cum ihn zuerst zu entfernen.");
+        DE.put("msg.shop_exists", "\u00a7cDu hast bereits einen Shop! Verwende \u00a7e/shop close \u00a7cum ihn zuerst zu entfernen.");
         DE.put("msg.shop_closed", "\u00a7aShop erfolgreich geschlossen! \u00a77(Deine Gegenstaende wurden gespeichert)");
-        DE.put("msg.shop_not_found", "\u00a7cDein Shop-NPC wurde nicht gefunden. Verwende \u00a7a/create_shop \u00a7cum ihn neu zu erstellen. \u00a77Deine Angebote sind weiterhin gespeichert.");
+        DE.put("msg.shop_not_found", "\u00a7cDein Shop-NPC wurde nicht gefunden. Verwende \u00a7a/shop create \u00a7cum ihn neu zu erstellen. \u00a77Deine Angebote sind weiterhin gespeichert.");
         DE.put("msg.shop_npc_not_found", "\u00a7cDu hast keinen Shop!");
         DE.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7e%s's Shop\u00a7c wurde von \u00a7e%s\u00a7c zerstoert! Die Angebote sind weiterhin gespeichert.");
         DE.put("msg.shop_not_exists", "\u00a7cShop \u00a7e%s \u00a7cnicht gefunden!");
@@ -883,7 +1003,8 @@ public class I18n {
         DE.put("msg.trade_success", "\u00a7aHandel abgeschlossen! Du hast \u00a7f%s erhalten");
         DE.put("msg.trade_item_taken", "\u00a7a\u00a7f%s \u00a7ax%d genommen");
         DE.put("msg.inventory_full", "\u00a7cInventar ist voll!");
-        DE.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cDu hast dein Skin PNG nicht in \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c abgelegt. Dein Gesicht wird in der Shop-Liste als Standard angezeigt, bis du es hinzufuegst.");
+        DE.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cDu hast dein Skin PNG nicht in {path}\u00a7c abgelegt. Dein Gesicht wird in der Shop-Liste als Standard angezeigt, bis du es hinzufuegst.");
+        DE.put("skin.click_to_open", "\u00a7eKlicken zum Oeffnen des Ordners");
 
         DE.put("storage.title", "Lager - %s");
         DE.put("storage.page", "Seite %d/%d | %d Gegenstaende");
@@ -914,6 +1035,20 @@ public class I18n {
         DE.put("select.hotbar", "Schnellleiste");
         DE.put("select.sell", "Verkaufen");
         DE.put("select.hint", "Links: Alles nehmen/platzieren | Rechts: Teilen/Einen platzieren");
+
+        DE.put("msg.target_has_shop", "\u00a7cDieser Spieler hat bereits ein Geschaft! Man kann nur eines besitzen.");
+        DE.put("msg.shop_deleted_notify", "\u00a7cDein Geschaft wurde geloescht. Tippe \u00a7e/shop recover \u00a7cum deine Gegenstaende zurueckzubekommen.");
+        DE.put("msg.no_recovery_items", "\u00a7cKeine Gegenstaende zur Wiederherstellung.");
+        DE.put("msg.all_recovered", "\u00a7aAlle deine Gegenstaende wurden wiederhergestellt!");
+        DE.put("msg.recovery_inventory_full", "\u00a7cInventar ist voll! Mach Platz und versuche es erneut.");
+        DE.put("msg.admin_only", "\u00a7cDieser Befehl ist nur fuer Administratoren!");
+        DE.put("msg.transfer_success", "\u00a7aGeschaftsbesitz erfolgreich uebertragen!");
+        DE.put("msg.repair_success", "\u00a7aGeschaftsbesitz erfolgreich repariert!");
+        DE.put("msg.shop_not_found_admin", "\u00a7cGeschaft nicht gefunden fuer Spieler: \u00a7e%s");
+        DE.put("msg.no_shops_without_uuid", "\u00a77Keine Geschaefte ohne UUID gefunden (alle sind bereits verknuepft).");
+        DE.put("msg.player_not_found", "\u00a7cSpieler nicht gefunden: \u00a7e%s");
+        DE.put("msg.no_shop_to_transfer", "\u00a7cSpieler \u00a7e%s \u00a7chat kein Geschaefte!");
+        DE.put("recovery.title", "Gegenstaende wiederherstellen");
     }
 
     // ==================== French (fr_fr) ====================
@@ -955,9 +1090,9 @@ public class I18n {
         FR.put("shoplist.offer_plural", "(%d offres)");
 
         FR.put("msg.shop_created", "\u00a7aBoutique creee: \u00a7eBoutique de %s \u00a7a\u00a7r");
-        FR.put("msg.shop_exists", "\u00a7cVous avez deja une boutique! Utilisez \u00a7e/close_shop \u00a7cpour la supprimer d'abord.");
+        FR.put("msg.shop_exists", "\u00a7cVous avez deja une boutique! Utilisez \u00a7e/shop close \u00a7cpour la supprimer d'abord.");
         FR.put("msg.shop_closed", "\u00a7aBoutique fermee avec succes! \u00a77(Vos articles sont sauvegardes)");
-        FR.put("msg.shop_not_found", "\u00a7cLe NPC de votre boutique n'a pas ete trouve. Utilisez \u00a7a/create_shop \u00a7cpour la recreer. \u00a77Vos offres sont toujours sauvegardees.");
+        FR.put("msg.shop_not_found", "\u00a7cLe NPC de votre boutique n'a pas ete trouve. Utilisez \u00a7a/shop create \u00a7cpour la recreer. \u00a77Vos offres sont toujours sauvegardees.");
         FR.put("msg.shop_npc_not_found", "\u00a7cVous n'avez pas de boutique!");
         FR.put("msg.shop_npc_killed", "\u00a7c\u2620 \u00a7eLa boutique de %s\u00a7c a ete detruite par \u00a7e%s\u00a7c! Les offres sont toujours sauvegardees.");
         FR.put("msg.shop_not_exists", "\u00a7cBoutique \u00a7e%s \u00a7cintrouvable!");
@@ -978,7 +1113,8 @@ public class I18n {
         FR.put("msg.trade_success", "\u00a7aEchange termine! Vous avez obtenu \u00a7f%s");
         FR.put("msg.trade_item_taken", "\u00a7aPris \u00a7f%s \u00a7ax%d");
         FR.put("msg.inventory_full", "\u00a7cL'inventaire est plein!");
-        FR.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVous n'avez pas place votre skin PNG dans \u00a7econfig/Easy Shop Mod/My Skin/\u00a7c. Votre visage apparaitra par defaut dans la Liste des Boutiques jusqu'a ce que vous l'ajoutiez.");
+        FR.put("msg.skin_not_found", "\u00a7e\u26a0 \u00a7cVous n'avez pas place votre skin PNG dans {path}\u00a7c. Votre visage apparaitra par defaut dans la Liste des Boutiques jusqu'a ce que vous l'ajoutiez.");
+        FR.put("skin.click_to_open", "\u00a7eCliquez pour ouvrir le dossier");
 
         FR.put("storage.title", "Stockage - %s");
         FR.put("storage.page", "Page %d/%d | %d articles");
@@ -1009,6 +1145,20 @@ public class I18n {
         FR.put("select.hotbar", "Barre d'actions");
         FR.put("select.sell", "Vendre");
         FR.put("select.hint", "Gauche: Prendre/Placer tout | Droit: Diviser/Placer un");
+
+        FR.put("msg.target_has_shop", "\u00a7cCe joueur a deja une boutique! On ne peut en posseder qu'une.");
+        FR.put("msg.shop_deleted_notify", "\u00a7cVotre boutique a ete supprimee. Tapez \u00a7e/shop recover \u00a7cpour recuperer vos objets.");
+        FR.put("msg.no_recovery_items", "\u00a7cAucun objet a recuperer.");
+        FR.put("msg.all_recovered", "\u00a7aTous vos objets ont ete recuperes!");
+        FR.put("msg.recovery_inventory_full", "\u00a7cL'inventaire est plein! Faites de la place et reessayez.");
+        FR.put("msg.admin_only", "\u00a7cCette commande est reservee aux administrateurs!");
+        FR.put("msg.transfer_success", "\u00a7aPropriete de la boutique transferee avec succes!");
+        FR.put("msg.repair_success", "\u00a7aPropriete de la boutique reparee avec succes!");
+        FR.put("msg.shop_not_found_admin", "\u00a7cBoutique non trouvee pour le joueur: \u00a7e%s");
+        FR.put("msg.no_shops_without_uuid", "\u00a77Aucune boutique sans UUID trouvee (toutes sont deja liees).");
+        FR.put("msg.player_not_found", "\u00a7cJoueur non trouve: \u00a7e%s");
+        FR.put("msg.no_shop_to_transfer", "\u00a7cLe joueur \u00a7e%s \u00a7cn'a pas de boutique!");
+        FR.put("recovery.title", "Recuperation d'objets");
     }
 
     // ==================== Language Detection ====================

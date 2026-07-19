@@ -5,6 +5,7 @@ import com.example.shopmod.data.I18n;
 import com.example.shopmod.data.PlayerSkinStore;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.data.ShopManager;
+import com.example.shopmod.data.RecoveryData;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -19,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -66,6 +68,9 @@ public class ShopMod implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(ModPackets.TOGGLE_SHOP_MOVE_ID, ModPackets.ToggleShopMovePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.UPLOAD_SKIN_ID,      ModPackets.UploadSkinPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModPackets.REQUEST_SKINS_ID,    ModPackets.RequestSkinsPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_RECOVERY_ID, ModPackets.OpenRecoveryPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ModPackets.RECOVERY_DATA_ID, ModPackets.RecoveryDataPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ModPackets.CLAIM_RECOVERY_ITEM_ID, ModPackets.ClaimRecoveryItemPayload.CODEC);
 
         CommandRegistrationCallback.EVENT.register(ShopCommand::register);
         registerServerPackets();
@@ -183,7 +188,8 @@ public class ShopMod implements ModInitializer {
                 int    buyCnt  = payload.buyCount();
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    if (!player.getName().getString().equals(owner)) return;
+                    ShopManager mgr = ShopManager.get(ctx.server());
+                    if (!isOwner(player, owner, mgr)) return;
 
                     Item sellItem = resolveItem(sellId);
                     if (sellItem == Items.AIR) return;
@@ -202,7 +208,6 @@ public class ShopMod implements ModInitializer {
                     Item buyItem = resolveItem(buyId);
                     if (buyItem == Items.AIR) return;
                     ItemStack buyStack = new ItemStack(buyItem, buyCnt);
-                    ShopManager mgr = ShopManager.get(ctx.server());
                     mgr.getOrCreate(owner).addTrade(sellStack, buyStack);
                     mgr.setDirty();
                     syncShop(player, mgr.get(owner));
@@ -215,7 +220,8 @@ public class ShopMod implements ModInitializer {
             (payload, ctx) -> {
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    if (!player.getName().getString().equals(payload.shopName())) return;
+                    ShopManager mgr = ShopManager.get(ctx.server());
+                    if (!isOwner(player, payload.shopName(), mgr)) return;
 
                     HolderLookup.Provider registries = ctx.server().registryAccess();
                     ShopManager.setCachedRegistries(registries);
@@ -242,7 +248,6 @@ public class ShopMod implements ModInitializer {
                     removeItems(player, sellStack.copy(), needed);
                     player.inventoryMenu.broadcastChanges();
 
-                    ShopManager mgr = ShopManager.get(ctx.server());
                     mgr.getOrCreate(payload.shopName()).addTrade(sellStack, buyStack);
                     mgr.setDirty();
                     syncShop(player, mgr.get(payload.shopName()));
@@ -256,8 +261,8 @@ public class ShopMod implements ModInitializer {
                 int index    = payload.index();
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    if (!player.getName().getString().equals(owner)) return;
                     ShopManager mgr = ShopManager.get(ctx.server());
+                    if (!isOwner(player, owner, mgr)) return;
                     ShopData data = mgr.get(owner);
                     if (data == null) return;
 
@@ -329,14 +334,16 @@ public class ShopMod implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_PICKER_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                if (!player.getName().getString().equals(payload.shopName())) return;
+                ShopManager mgr = ShopManager.get(ctx.server());
+                if (!isOwner(player, payload.shopName(), mgr)) return;
                 ServerPlayNetworking.send(player, new ModPackets.OpenPickerPayload(payload.shopName()));
             }));
 
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_AMOUNT_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                if (!player.getName().getString().equals(payload.shopName())) return;
+                ShopManager mgr = ShopManager.get(ctx.server());
+                if (!isOwner(player, payload.shopName(), mgr)) return;
                 ServerPlayNetworking.send(player,
                     new ModPackets.OpenAmountPayload(payload.shopName(), payload.itemId()));
             }));
@@ -344,15 +351,16 @@ public class ShopMod implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_OWNER_SCREEN_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                if (!player.getName().getString().equals(payload.shopName())) return;
+                ShopManager mgr = ShopManager.get(ctx.server());
+                if (!isOwner(player, payload.shopName(), mgr)) return;
                 sendOpenOwner(player, payload.shopName());
             }));
 
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_STORAGE_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                if (!player.getName().getString().equals(payload.shopName())) return;
                 ShopManager mgr = ShopManager.get(ctx.server());
+                if (!isOwner(player, payload.shopName(), mgr)) return;
                 ShopData data = mgr.get(payload.shopName());
                 if (data != null) {
                     ServerPlayNetworking.send(player, new ModPackets.OpenStoragePayload(payload.shopName(), data.toNbt()));
@@ -362,8 +370,8 @@ public class ShopMod implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.TAKE_STORAGE_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                if (!player.getName().getString().equals(payload.shopName())) return;
                 ShopManager mgr = ShopManager.get(ctx.server());
+                if (!isOwner(player, payload.shopName(), mgr)) return;
                 ShopData data = mgr.get(payload.shopName());
                 if (data == null) return;
 
@@ -406,7 +414,7 @@ public class ShopMod implements ModInitializer {
                 String playerName = player.getName().getString();
                 ShopManager mgr = ShopManager.get(ctx.server());
 
-                if (mgr.hasNpc(playerName)) {
+                if (mgr.playerHasShop(playerName, player.getUUID())) {
                     player.displayClientMessage(Component.literal(I18n.get("msg.shop_exists")), false);
                     return;
                 }
@@ -448,9 +456,9 @@ public class ShopMod implements ModInitializer {
                 boolean enabled = payload.enabled();
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    if (!player.getName().getString().equals(owner)) return;
-
                     ShopManager mgr = ShopManager.get(ctx.server());
+                    if (!isOwner(player, owner, mgr)) return;
+
                     ShopData data = mgr.get(owner);
                     if (data == null) return;
 
@@ -541,6 +549,34 @@ public class ShopMod implements ModInitializer {
                     LOGGER.info("[ShopMod] Sent all available skins to {}", requesterUuid);
                 });
             });
+
+        // ==================== Recovery System Packets ====================
+
+        // C2S: Player claims a recovery item
+        ServerPlayNetworking.registerGlobalReceiver(ModPackets.CLAIM_RECOVERY_ITEM_ID,
+            (payload, ctx) -> ctx.server().execute(() -> {
+                ServerPlayer player = ctx.player();
+                int index = payload.index();
+                HolderLookup.Provider registries = ctx.server().registryAccess();
+                List<RecoveryData.ItemStackWithSource> items = RecoveryData.load(player.getUUID(), registries);
+                if (items == null || index < 0 || index >= items.size()) return;
+
+                ItemStack stack = items.get(index).stack();
+                if (addToMainInventory(player, stack)) {
+                    RecoveryData.removeItem(player.getUUID(), index, registries);
+                    player.inventoryMenu.broadcastChanges();
+                    // Check if all items recovered
+                    if (RecoveryData.isEmpty(player.getUUID())) {
+                        player.displayClientMessage(Component.literal(I18n.get("msg.all_recovered")), false);
+                        // Close recovery screen
+                        if (player.containerMenu != player.inventoryMenu) {
+                            player.closeContainer();
+                        }
+                    }
+                } else {
+                    player.displayClientMessage(Component.literal(I18n.get("msg.recovery_inventory_full")), false);
+                }
+            }));
     }
 
     public static void syncShop(ServerPlayer player, ShopData data) {
@@ -674,5 +710,16 @@ public class ShopMod implements ModInitializer {
             }
         }
         player.getInventory().setChanged();
+    }
+
+    private static boolean isOwner(ServerPlayer player, String shopOwnerName, ShopManager mgr) {
+        ShopData data = mgr.get(shopOwnerName);
+        if (data == null) return false;
+        // If shop has UUID, compare by UUID (handles name changes)
+        if (data.getOwnerUuid() != null) {
+            return data.getOwnerUuid().equals(player.getUUID());
+        }
+        // Fallback: compare by name
+        return player.getName().getString().equals(shopOwnerName);
     }
 }
