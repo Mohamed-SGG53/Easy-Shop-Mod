@@ -47,6 +47,8 @@ public class RecoveryScreen extends Screen {
 
     @Override
     protected void init() {
+        super.init(); // Let parent add vanilla widgets (close button etc.)
+        clearWidgets(); // Remove all vanilla widgets
         int px = (width - W) / 2, py = (height - H) / 2;
         int total = Math.max(1, (int) Math.ceil(items.size() / (double) PER_PAGE));
         if (page > 0) addRenderableWidget(Button.builder(Component.literal(I18n.get("shop.prev")), btn -> { page--; clearWidgets(); init(); }).bounds(px + 10, py + H - 28, 40, 20).build());
