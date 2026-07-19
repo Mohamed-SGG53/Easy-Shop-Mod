@@ -7,8 +7,6 @@ This is the **latest stable standalone version** of the mod, fully working on:
 * **Minecraft Java 26.1.x**
 * **Fabric Loader**
 
-🔹 **Mod Version:** `V8.0.2`
-
 🔹 This version is based on **Official Mojang Mappings**
 
 🔹 This is the **final standalone release version**
@@ -48,10 +46,8 @@ Download the mod from:
 
 هذا هو **آخر إصدار مستقر مستقل** من المود يعمل بنجاح على:
 
-* **Minecraft Java 1.21.11**
+* **Minecraft Java 26.1.x**
 * **Fabric Loader**
-
-🔹 **إصدار المود:** `V8.0.2`
 
 🔹 يعتمد هذا الإصدار على **Official Mojang Mappings**
 
