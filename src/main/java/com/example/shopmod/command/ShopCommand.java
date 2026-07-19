@@ -372,7 +372,7 @@ public final class ShopCommand {
                         mgr.deleteShop(targetName);
 
                         final String deletedName = targetName;
-                        source.sendSuccess(() -> Component.literal("\u00a7aShop deleted for: \u00a7e" + deletedName), false);
+                        source.sendSuccess(() -> Component.literal(I18n.get("msg.shop_deleted_admin", deletedName)), false);
                         return 1;
                     })
                 )

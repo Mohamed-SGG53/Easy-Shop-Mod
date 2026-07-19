@@ -119,6 +119,7 @@ public class I18n {
         EN.put("msg.select_price", "\u00a7cSet the price first!");
         EN.put("msg.not_enough_items", "\u00a7cYou need \u00a7e%d %s\u00a7c! You have \u00a7e%d");
         EN.put("msg.not_enough_money", "\u00a7cYou need \u00a7e%d \u00a7c%s \u00a7c - You have \u00a7e%d");
+        EN.put("msg.shop_deleted_admin", "\u00a7aShop deleted for: \u00a7e%s");
 
         EN.put("msg.trade_success", "\u00a7aTrade complete! You got \u00a7f%s");
         EN.put("msg.trade_item_taken", "\u00a7aTook \u00a7f%s \u00a7ax%d");
@@ -219,6 +220,7 @@ public class I18n {
         AR.put("msg.no_shops", "\u00a77لا توجد متاجر بعد.");
         AR.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 قائمة المتاجر \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         AR.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7fمتجر %s \u00a7c(%d عروض)");
+        AR.put("msg.shop_deleted_admin", "\u00a7aتم حذف المتجر للاعب: \u00a7e%s");
 
         AR.put("msg.offer_added", "\u00a7aتم إضافة العرض بنجاح!");
         AR.put("msg.offer_removed", "\u00a7aتم إزالة العرض!");
@@ -329,6 +331,8 @@ public class I18n {
         ZH.put("msg.no_shops", "\u00a77暂无商店.");
         ZH.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 商店列表 \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         ZH.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7f%s的商店 \u00a7c(%d 个商品)");
+        ZH.put("msg.shop_deleted_admin", "\u00a7a已删除玩家的商店: \u00a7e%s");
+
 
         ZH.put("msg.offer_added", "\u00a7a商品添加成功!");
         ZH.put("msg.offer_removed", "\u00a7a商品已移除!");
@@ -439,6 +443,8 @@ public class I18n {
         JA.put("msg.no_shops", "\u00a77まだショップがありません.");
         JA.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 ショップリスト \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         JA.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7f%sのショップ \u00a7c(%d 商品)");
+        JA.put("msg.shop_deleted_admin", "\u00a7aショップを削除しました: \u00a7e%s");
+
 
         JA.put("msg.offer_added", "\u00a7a商品を追加しました!");
         JA.put("msg.offer_removed", "\u00a7a商品を削除しました!");
@@ -549,6 +555,8 @@ public class I18n {
         KO.put("msg.no_shops", "\u00a77아직 상점이 없습니다.");
         KO.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 상점 목록 \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         KO.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7f%s의 상점 \u00a7c(%d개 상품)");
+        KO.put("msg.shop_deleted_admin", "\u00a7a상점이 삭제되었습니다: \u00a7e%s");
+
 
         KO.put("msg.offer_added", "\u00a7a상품이 추가되었습니다!");
         KO.put("msg.offer_removed", "\u00a7a상품이 삭제되었습니다!");
@@ -659,6 +667,8 @@ public class I18n {
         ES.put("msg.no_shops", "\u00a77Aun no hay tiendas.");
         ES.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Lista de Tiendas \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         ES.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7fTienda de %s \u00a7c(%d ofertas)");
+        ES.put("msg.shop_deleted_admin", "\u00a7aTienda eliminada para: \u00a7e%s");
+
 
         ES.put("msg.offer_added", "\u00a7aOferta agregada con exito!");
         ES.put("msg.offer_removed", "\u00a7aOferta eliminada!");
@@ -769,6 +779,8 @@ public class I18n {
         PT.put("msg.no_shops", "\u00a77Nenhuma loja ainda.");
         PT.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Lista de Lojas \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         PT.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7fLoja de %s \u00a7c(%d ofertas)");
+        PT.put("msg.shop_deleted_admin", "\u00a7aLoja deletada para: \u00a7e%s");
+
 
         PT.put("msg.offer_added", "\u00a7aOferta adicionada com sucesso!");
         PT.put("msg.offer_removed", "\u00a7aOferta removida!");
@@ -879,6 +891,8 @@ public class I18n {
         RU.put("msg.no_shops", "\u00a77Poka net magazinov.");
         RU.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Spisok magazinov \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         RU.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7fMagazin %s \u00a7c(%d tovarov)");
+        RU.put("msg.shop_deleted_admin", "\u00a7aMagazin udalen dlya: \u00a7e%s");
+
 
         RU.put("msg.offer_added", "\u00a7aTovar dobavlen!");
         RU.put("msg.offer_removed", "\u00a7aTovar udalen!");
@@ -989,6 +1003,8 @@ public class I18n {
         DE.put("msg.no_shops", "\u00a77Noch keine Shops vorhanden.");
         DE.put("msg.shop_list_header", "\u00a76\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Shop-Liste \u2500\u2500\u2500\u2500\u2500\u2500\u2500");
         DE.put("msg.shop_list_item", "\u00a7a\u25b6 \u00a7f%s's Shop \u00a7c(%d Angebote)");
+        DE.put("msg.shop_deleted_admin", "\u00a7aShop geloescht fuer: \u00a7e%s");
+
 
         DE.put("msg.offer_added", "\u00a7aAngebot erfolgreich hinzugefuegt!");
         DE.put("msg.offer_removed", "\u00a7aAngebot entfernt!");
@@ -1104,6 +1120,8 @@ public class I18n {
         FR.put("msg.offer_removed", "\u00a7aOffre supprimee!");
         FR.put("msg.offer_returned_storage", "\u00a7eInventaire plein, article deplace dans le Stockage!");
         FR.put("msg.offer_returned_inventory", "\u00a7aArticle retourne dans l'inventaire!");
+        FR.put("msg.shop_deleted_admin", "\u00a7aBoutique supprimee pour: \u00a7e%s");
+
 
         FR.put("msg.select_item", "\u00a7cSelectionnez d'abord l'article a vendre!");
         FR.put("msg.select_price", "\u00a7cDefinissez d'abord le prix!");
