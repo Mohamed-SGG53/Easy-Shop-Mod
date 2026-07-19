@@ -1,6 +1,7 @@
 package com.example.shopmod.client;
 
 import com.example.shopmod.data.ShopData;
+import com.example.shopmod.data.RecoveryData;
 import com.example.shopmod.network.ModPackets;
 import com.example.shopmod.screen.AmountInputScreen;
 import com.example.shopmod.screen.ItemPickerScreen;
@@ -8,6 +9,7 @@ import com.example.shopmod.screen.ShopBuyerScreen;
 import com.example.shopmod.screen.ShopListScreen;
 import com.example.shopmod.screen.ShopOwnerScreen;
 import com.example.shopmod.screen.StorageScreen;
+import com.example.shopmod.screen.RecoveryScreen;
 import com.example.shopmod.client.SkinHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -137,6 +139,24 @@ public final class ClientPacketHandler {
                         SkinHelper.saveOtherSkin(uuid, pngData);
                     }
                 }.start();
+            });
+
+        // ==================== Recovery System Receivers ====================
+
+        // S2C: Server sends recovery items data
+        ClientPlayNetworking.registerGlobalReceiver(ModPackets.RECOVERY_DATA_ID,
+            (payload, ctx) -> {
+                HolderLookup.Provider reg = ctx.client().level != null ? ctx.client().level.registryAccess() : null;
+                List<RecoveryData.ItemStackWithSource> recoveryItems = RecoveryData.deserializeFromNetwork(payload.itemsData(), reg);
+                ctx.client().execute(() -> {
+                    if (ctx.client().screen instanceof RecoveryScreen s) {
+                        s.setItems(recoveryItems);
+                    } else {
+                        RecoveryScreen s = new RecoveryScreen();
+                        s.setItems(recoveryItems);
+                        ctx.client().setScreen(s);
+                    }
+                });
             });
     }
 

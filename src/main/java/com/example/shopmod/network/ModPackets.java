@@ -60,6 +60,13 @@ public final class ModPackets {
     // S2C - Shop navigation data
     public static final CustomPacketPayload.Type<ShopNavPayload> SHOP_NAV_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "shop_nav"));
 
+    // S2C - Recovery System
+    public static final CustomPacketPayload.Type<OpenRecoveryPayload> OPEN_RECOVERY_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "open_recovery"));
+    public static final CustomPacketPayload.Type<RecoveryDataPayload> RECOVERY_DATA_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "recovery_data"));
+
+    // C2S - Recovery System
+    public static final CustomPacketPayload.Type<ClaimRecoveryItemPayload> CLAIM_RECOVERY_ITEM_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "claim_recovery_item"));
+
     // C2S IDs
     public static final CustomPacketPayload.Type<AddTradePayload>       ADD_TRADE_ID        = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "add_trade"));
     public static final CustomPacketPayload.Type<AddEnchantedBookTradePayload> ADD_BOOK_TRADE_ID = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("shopmod", "add_book_trade"));
@@ -395,6 +402,34 @@ public final class ModPackets {
             buf -> new SkinDataPayload(buf.readLong(), buf.readLong(), buf.readByteArray())
         );
         @Override public CustomPacketPayload.Type<SkinDataPayload> type() { return SKIN_DATA_ID; }
+    }
+
+    // ============================================================
+    // Recovery Payloads
+    // ============================================================
+
+    /** S2C: Empty payload, triggers RecoveryScreen on client. */
+    public record OpenRecoveryPayload() implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, OpenRecoveryPayload> CODEC = StreamCodec.unit(new OpenRecoveryPayload());
+        @Override public CustomPacketPayload.Type<OpenRecoveryPayload> type() { return OPEN_RECOVERY_ID; }
+    }
+
+    /** S2C: Sends all recovery items as a single CompoundTag with a list of items. */
+    public record RecoveryDataPayload(CompoundTag itemsData) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, RecoveryDataPayload> CODEC = StreamCodec.of(
+            (buf, v) -> writeNbt(buf, v.itemsData()),
+            buf -> new RecoveryDataPayload(readNbt(buf))
+        );
+        @Override public CustomPacketPayload.Type<RecoveryDataPayload> type() { return RECOVERY_DATA_ID; }
+    }
+
+    /** C2S: Player claims a recovery item at the given index. */
+    public record ClaimRecoveryItemPayload(int index) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, ClaimRecoveryItemPayload> CODEC = StreamCodec.of(
+            (buf, v) -> buf.writeVarInt(v.index()),
+            buf -> new ClaimRecoveryItemPayload(buf.readVarInt())
+        );
+        @Override public CustomPacketPayload.Type<ClaimRecoveryItemPayload> type() { return CLAIM_RECOVERY_ITEM_ID; }
     }
 
     private ModPackets() {}

@@ -3,6 +3,7 @@ package com.example.shopmod;
 import com.example.shopmod.command.ShopCommand;
 import com.example.shopmod.data.I18n;
 import com.example.shopmod.data.PlayerSkinStore;
+import com.example.shopmod.data.RecoveryData;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.data.ShopManager;
 import com.example.shopmod.network.ModPackets;
@@ -66,6 +67,9 @@ public class ShopMod implements ModInitializer {
         PayloadTypeRegistry.clientboundPlay().register(ModPackets.SKIN_DATA_ID, ModPackets.SkinDataPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ModPackets.UPLOAD_SKIN_ID,      ModPackets.UploadSkinPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ModPackets.REQUEST_SKINS_ID,    ModPackets.RequestSkinsPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_RECOVERY_ID, ModPackets.OpenRecoveryPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.RECOVERY_DATA_ID, ModPackets.RecoveryDataPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.CLAIM_RECOVERY_ITEM_ID, ModPackets.ClaimRecoveryItemPayload.CODEC);
 
         CommandRegistrationCallback.EVENT.register(ShopCommand::register);
         registerServerPackets();
@@ -541,6 +545,34 @@ public class ShopMod implements ModInitializer {
                     LOGGER.info("[ShopMod] Sent all available skins to {}", requesterUuid);
                 });
             });
+
+        // ==================== Recovery System Packets ====================
+
+        // C2S: Player claims a recovery item
+        ServerPlayNetworking.registerGlobalReceiver(ModPackets.CLAIM_RECOVERY_ITEM_ID,
+            (payload, ctx) -> ctx.server().execute(() -> {
+                ServerPlayer player = ctx.player();
+                int index = payload.index();
+                HolderLookup.Provider registries = ctx.server().registryAccess();
+                List<RecoveryData.ItemStackWithSource> items = RecoveryData.load(player.getUUID(), registries);
+                if (items == null || index < 0 || index >= items.size()) return;
+
+                ItemStack stack = items.get(index).stack();
+                if (addToMainInventory(player, stack)) {
+                    RecoveryData.removeItem(player.getUUID(), index, registries);
+                    player.inventoryMenu.broadcastChanges();
+                    // Check if all items recovered
+                    if (RecoveryData.isEmpty(player.getUUID())) {
+                        player.sendSystemMessage(Component.literal(I18n.get("msg.all_recovered")));
+                        // Close recovery screen
+                        if (player.containerMenu != player.inventoryMenu) {
+                            player.closeContainer();
+                        }
+                    }
+                } else {
+                    player.sendSystemMessage(Component.literal(I18n.get("msg.recovery_inventory_full")));
+                }
+            }));
     }
 
     public static void syncShop(ServerPlayer player, ShopData data) {

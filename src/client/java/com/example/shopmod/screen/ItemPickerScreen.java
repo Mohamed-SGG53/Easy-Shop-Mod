@@ -41,7 +41,7 @@ public class ItemPickerScreen extends Screen {
         "minecraft:command_block_minecart","minecraft:structure_block","minecraft:structure_void",
         "minecraft:barrier","minecraft:light","minecraft:jigsaw","minecraft:debug_stick",
         "minecraft:test_block","minecraft:test_instance_block","minecraft:end_portal_frame","minecraft:bedrock",
-        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow"
+        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow", "minecraft:air"
     );
 
     /**
@@ -55,7 +55,7 @@ public class ItemPickerScreen extends Screen {
         for (Item item : BuiltInRegistries.ITEM) {
             var itemId = BuiltInRegistries.ITEM.getKey(item);
             String itemIdStr = itemId.toString();
-            if (itemIdStr.contains("spawn_egg") || EXCLUDED_ITEMS.contains(itemIdStr) || isHiddenItem(itemIdStr) || itemIdStr.equals("minecraft:enchanted_book")) continue;
+            if (item == Items.AIR || itemIdStr.contains("spawn_egg") || EXCLUDED_ITEMS.contains(itemIdStr) || isHiddenItem(itemIdStr) || itemIdStr.equals("minecraft:enchanted_book")) continue;
             allItems.add(new ItemStack(item));
         }
         shown = new ArrayList<>(allItems);
