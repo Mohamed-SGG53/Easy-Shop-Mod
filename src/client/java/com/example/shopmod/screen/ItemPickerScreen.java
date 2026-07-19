@@ -5,7 +5,7 @@ import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -41,7 +41,7 @@ public class ItemPickerScreen extends Screen {
         "minecraft:command_block_minecart","minecraft:structure_block","minecraft:structure_void",
         "minecraft:barrier","minecraft:light","minecraft:jigsaw","minecraft:debug_stick",
         "minecraft:test_block","minecraft:test_instance_block","minecraft:end_portal_frame","minecraft:bedrock",
-        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow", "minecraft:air"
+        "minecraft:spawner","minecraft:trial_spawner","minecraft:player_head", "minecraft:tipped_arrow"
     );
 
     /**
@@ -129,7 +129,7 @@ public class ItemPickerScreen extends Screen {
             || id.contains("test_instance") || id.endsWith("_spawn_egg");
     }
 
-    private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
+    private static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x,y,x+w,y+1,color); ctx.fill(x,y+h-1,x+w,y+h,color);
         ctx.fill(x,y,x+1,y+h,color); ctx.fill(x+w-1,y,x+w,y+h,color);
     }
@@ -165,13 +165,13 @@ public class ItemPickerScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics ctx, int mx, int my, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
         ctx.fill(0, 0, width, height, 0x88000000);
         int px=(width-W)/2, py=(height-H)/2;
         ctx.fill(px,py,px+W,py+H,0xE0100800);
         drawBorder(ctx,px,py,W,H,0xFF8B6914);
         ctx.fill(px,py,px+W,py+22,0xFF3D1F00);
-        ctx.drawCenteredString(font, Component.literal(I18n.get("picker.title") + " - " + shopName), px+W/2, py+7, 0xFFFFFFFF);
+        ctx.centeredText(font, Component.literal(I18n.get("picker.title") + " - " + shopName), px+W/2, py+7, 0xFFFFFFFF);
 
         int gridWidth = COLS * (SLOT_SIZE + SLOT_GAP);
         int gridX = px + (W - gridWidth) / 2, gridY = py + 46;
@@ -183,12 +183,12 @@ public class ItemPickerScreen extends Screen {
             boolean hov=mx>=sx&&mx<sx+SLOT_SIZE&&my>=sy&&my<sy+SLOT_SIZE;
             ctx.fill(sx,sy,sx+SLOT_SIZE,sy+SLOT_SIZE, hov?0xAA8B6914:0x88333333);
             drawBorder(ctx,sx,sy,SLOT_SIZE,SLOT_SIZE,0xFF555555);
-            ctx.renderItem(shown.get(idx),sx+3,sy+3);
+            ctx.item(shown.get(idx),sx+3,sy+3);
             if(hov) hovered=shown.get(idx);
         }
         int total=Math.max(1,(shown.size()+PER_PAGE-1)/PER_PAGE);
-        ctx.drawCenteredString(font, Component.literal(I18n.get("picker.page_info", page+1, total, shown.size())), px+W/2, py+H-38, 0xAAAAAA);
-        super.render(ctx, mx, my, delta);
+        ctx.centeredText(font, Component.literal(I18n.get("picker.page_info", page+1, total, shown.size())), px+W/2, py+H-38, 0xAAAAAA);
+        super.extractRenderState(ctx, mx, my, delta);
         // Proper tooltip rendering
         if(!hovered.isEmpty()) {
             ctx.setTooltipForNextFrame(font, hovered, mx, my);

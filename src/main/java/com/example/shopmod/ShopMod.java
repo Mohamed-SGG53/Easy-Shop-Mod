@@ -5,7 +5,6 @@ import com.example.shopmod.data.I18n;
 import com.example.shopmod.data.PlayerSkinStore;
 import com.example.shopmod.data.ShopData;
 import com.example.shopmod.data.ShopManager;
-import com.example.shopmod.data.RecoveryData;
 import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -20,7 +19,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -45,32 +43,29 @@ public class ShopMod implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("ShopMod initializing...");
 
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_OWNER_ID,   ModPackets.OpenOwnerPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_BUYER_ID,   ModPackets.OpenBuyerPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_PICKER_ID,  ModPackets.OpenPickerPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_AMOUNT_ID,  ModPackets.OpenAmountPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.SYNC_SHOP_ID,    ModPackets.SyncShopPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_STORAGE_ID, ModPackets.OpenStoragePayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_SHOPS_LIST_ID, ModPackets.OpenShopsListPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.SHOP_NAV_ID, ModPackets.ShopNavPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.SKIN_DATA_ID, ModPackets.SkinDataPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.ADD_TRADE_ID,        ModPackets.AddTradePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.ADD_BOOK_TRADE_ID,    ModPackets.AddEnchantedBookTradePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.REMOVE_TRADE_ID,     ModPackets.RemoveTradePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.DO_TRADE_ID,         ModPackets.DoTradePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.REQ_PICKER_ID,       ModPackets.ReqPickerPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.REQ_AMOUNT_ID,       ModPackets.ReqAmountPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.REQ_OWNER_SCREEN_ID, ModPackets.ReqOwnerScreenPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.REQ_STORAGE_ID,      ModPackets.ReqStoragePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.TAKE_STORAGE_ID,     ModPackets.TakeStoragePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.OPEN_SHOP_FROM_LIST_ID, ModPackets.OpenShopFromListPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.CREATE_SHOP_FROM_LIST_ID, ModPackets.CreateShopFromListPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.TOGGLE_SHOP_MOVE_ID, ModPackets.ToggleShopMovePayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.UPLOAD_SKIN_ID,      ModPackets.UploadSkinPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.REQUEST_SKINS_ID,    ModPackets.RequestSkinsPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.OPEN_RECOVERY_ID, ModPackets.OpenRecoveryPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ModPackets.RECOVERY_DATA_ID, ModPackets.RecoveryDataPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(ModPackets.CLAIM_RECOVERY_ITEM_ID, ModPackets.ClaimRecoveryItemPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_OWNER_ID,   ModPackets.OpenOwnerPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_BUYER_ID,   ModPackets.OpenBuyerPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_PICKER_ID,  ModPackets.OpenPickerPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_AMOUNT_ID,  ModPackets.OpenAmountPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.SYNC_SHOP_ID,    ModPackets.SyncShopPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_STORAGE_ID, ModPackets.OpenStoragePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.OPEN_SHOPS_LIST_ID, ModPackets.OpenShopsListPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.SHOP_NAV_ID, ModPackets.ShopNavPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.ADD_TRADE_ID,        ModPackets.AddTradePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.ADD_BOOK_TRADE_ID,    ModPackets.AddEnchantedBookTradePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.REMOVE_TRADE_ID,     ModPackets.RemoveTradePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.DO_TRADE_ID,         ModPackets.DoTradePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.REQ_PICKER_ID,       ModPackets.ReqPickerPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.REQ_AMOUNT_ID,       ModPackets.ReqAmountPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.REQ_OWNER_SCREEN_ID, ModPackets.ReqOwnerScreenPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.REQ_STORAGE_ID,      ModPackets.ReqStoragePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.TAKE_STORAGE_ID,     ModPackets.TakeStoragePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.OPEN_SHOP_FROM_LIST_ID, ModPackets.OpenShopFromListPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.CREATE_SHOP_FROM_LIST_ID, ModPackets.CreateShopFromListPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.TOGGLE_SHOP_MOVE_ID, ModPackets.ToggleShopMovePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModPackets.SKIN_DATA_ID, ModPackets.SkinDataPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.UPLOAD_SKIN_ID,      ModPackets.UploadSkinPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModPackets.REQUEST_SKINS_ID,    ModPackets.RequestSkinsPayload.CODEC);
 
         CommandRegistrationCallback.EVENT.register(ShopCommand::register);
         registerServerPackets();
@@ -188,8 +183,7 @@ public class ShopMod implements ModInitializer {
                 int    buyCnt  = payload.buyCount();
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    ShopManager mgr = ShopManager.get(ctx.server());
-                    if (!isOwner(player, owner, mgr)) return;
+                    if (!player.getName().getString().equals(owner)) return;
 
                     Item sellItem = resolveItem(sellId);
                     if (sellItem == Items.AIR) return;
@@ -197,8 +191,8 @@ public class ShopMod implements ModInitializer {
 
                     int found = countItem(player, sellStack);
                     if (found < sellCnt) {
-                        player.displayClientMessage(Component.literal(
-                            I18n.get("msg.not_enough_items", sellCnt, sellStack.getHoverName().getString(), found)), false);
+                        player.sendSystemMessage(Component.literal(
+                            I18n.get("msg.not_enough_items", sellCnt, sellStack.getHoverName().getString(), found)));
                         return;
                     }
 
@@ -208,11 +202,12 @@ public class ShopMod implements ModInitializer {
                     Item buyItem = resolveItem(buyId);
                     if (buyItem == Items.AIR) return;
                     ItemStack buyStack = new ItemStack(buyItem, buyCnt);
+                    ShopManager mgr = ShopManager.get(ctx.server());
                     mgr.getOrCreate(owner).addTrade(sellStack, buyStack);
                     mgr.setDirty();
                     syncShop(player, mgr.get(owner));
 
-                    player.displayClientMessage(Component.literal(I18n.get("msg.offer_added")), false);
+                    player.sendSystemMessage(Component.literal(I18n.get("msg.offer_added")));
                 });
             });
 
@@ -220,8 +215,7 @@ public class ShopMod implements ModInitializer {
             (payload, ctx) -> {
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    ShopManager mgr = ShopManager.get(ctx.server());
-                    if (!isOwner(player, payload.shopName(), mgr)) return;
+                    if (!player.getName().getString().equals(payload.shopName())) return;
 
                     HolderLookup.Provider registries = ctx.server().registryAccess();
                     ShopManager.setCachedRegistries(registries);
@@ -229,29 +223,30 @@ public class ShopMod implements ModInitializer {
                     ItemStack buyStack  = ShopData.itemStackFromNbt(payload.buyData(), registries);
 
                     if (sellStack.isEmpty()) {
-                        player.displayClientMessage(Component.literal("\u00a7cFailed to read sell item!"), false);
+                        player.sendSystemMessage(Component.literal("\u00a7cFailed to read sell item!"));
                         return;
                     }
                     if (buyStack.isEmpty()) {
-                        player.displayClientMessage(Component.literal("\u00a7cFailed to read price item!"), false);
+                        player.sendSystemMessage(Component.literal("\u00a7cFailed to read price item!"));
                         return;
                     }
 
                     int needed = sellStack.getCount();
                     int found  = countItem(player, sellStack);
                     if (found < needed) {
-                        player.displayClientMessage(Component.literal(
-                            I18n.get("msg.not_enough_items", needed, sellStack.getHoverName().getString(), found)), false);
+                        player.sendSystemMessage(Component.literal(
+                            I18n.get("msg.not_enough_items", needed, sellStack.getHoverName().getString(), found)));
                         return;
                     }
 
                     removeItems(player, sellStack.copy(), needed);
                     player.inventoryMenu.broadcastChanges();
 
+                    ShopManager mgr = ShopManager.get(ctx.server());
                     mgr.getOrCreate(payload.shopName()).addTrade(sellStack, buyStack);
                     mgr.setDirty();
                     syncShop(player, mgr.get(payload.shopName()));
-                    player.displayClientMessage(Component.literal(I18n.get("msg.offer_added")), false);
+                    player.sendSystemMessage(Component.literal(I18n.get("msg.offer_added")));
                 });
             });
 
@@ -261,8 +256,8 @@ public class ShopMod implements ModInitializer {
                 int index    = payload.index();
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
+                    if (!player.getName().getString().equals(owner)) return;
                     ShopManager mgr = ShopManager.get(ctx.server());
-                    if (!isOwner(player, owner, mgr)) return;
                     ShopData data = mgr.get(owner);
                     if (data == null) return;
 
@@ -272,9 +267,9 @@ public class ShopMod implements ModInitializer {
                         // Use addToMainInventory (slots 0-35 only, no armor/offhand)
                         if (!addToMainInventory(player, toReturn)) {
                             data.addToStorage(removed.sellItem.copy());
-                            player.displayClientMessage(Component.literal(I18n.get("msg.offer_returned_storage")), false);
+                            player.sendSystemMessage(Component.literal(I18n.get("msg.offer_returned_storage")));
                         } else {
-                            player.displayClientMessage(Component.literal(I18n.get("msg.offer_returned_inventory")), false);
+                            player.sendSystemMessage(Component.literal(I18n.get("msg.offer_returned_inventory")));
                         }
                     }
 
@@ -302,8 +297,8 @@ public class ShopMod implements ModInitializer {
                     int found  = countItem(player, price);
 
                     if (found < needed) {
-                        player.displayClientMessage(Component.literal(
-                            I18n.get("msg.not_enough_money", needed, price.getHoverName().getString(), found)), false);
+                        player.sendSystemMessage(Component.literal(
+                            I18n.get("msg.not_enough_money", needed, price.getHoverName().getString(), found)));
                         return;
                     }
 
@@ -324,8 +319,8 @@ public class ShopMod implements ModInitializer {
                     player.inventoryMenu.broadcastChanges();
                     mgr.setDirty();
 
-                    player.displayClientMessage(Component.literal(
-                        I18n.get("msg.trade_success", rewardName + " x" + rewardCount)), true);
+                    player.sendSystemMessage(Component.literal(
+                        I18n.get("msg.trade_success", rewardName + " x" + rewardCount)));
 
                     ServerPlayNetworking.send(player, new ModPackets.OpenBuyerPayload(owner, data.toNbt()));
                 });
@@ -334,16 +329,14 @@ public class ShopMod implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_PICKER_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                ShopManager mgr = ShopManager.get(ctx.server());
-                if (!isOwner(player, payload.shopName(), mgr)) return;
+                if (!player.getName().getString().equals(payload.shopName())) return;
                 ServerPlayNetworking.send(player, new ModPackets.OpenPickerPayload(payload.shopName()));
             }));
 
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_AMOUNT_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                ShopManager mgr = ShopManager.get(ctx.server());
-                if (!isOwner(player, payload.shopName(), mgr)) return;
+                if (!player.getName().getString().equals(payload.shopName())) return;
                 ServerPlayNetworking.send(player,
                     new ModPackets.OpenAmountPayload(payload.shopName(), payload.itemId()));
             }));
@@ -351,16 +344,15 @@ public class ShopMod implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_OWNER_SCREEN_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
-                ShopManager mgr = ShopManager.get(ctx.server());
-                if (!isOwner(player, payload.shopName(), mgr)) return;
+                if (!player.getName().getString().equals(payload.shopName())) return;
                 sendOpenOwner(player, payload.shopName());
             }));
 
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.REQ_STORAGE_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
+                if (!player.getName().getString().equals(payload.shopName())) return;
                 ShopManager mgr = ShopManager.get(ctx.server());
-                if (!isOwner(player, payload.shopName(), mgr)) return;
                 ShopData data = mgr.get(payload.shopName());
                 if (data != null) {
                     ServerPlayNetworking.send(player, new ModPackets.OpenStoragePayload(payload.shopName(), data.toNbt()));
@@ -370,8 +362,8 @@ public class ShopMod implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.TAKE_STORAGE_ID,
             (payload, ctx) -> ctx.server().execute(() -> {
                 ServerPlayer player = ctx.player();
+                if (!player.getName().getString().equals(payload.shopName())) return;
                 ShopManager mgr = ShopManager.get(ctx.server());
-                if (!isOwner(player, payload.shopName(), mgr)) return;
                 ShopData data = mgr.get(payload.shopName());
                 if (data == null) return;
 
@@ -383,9 +375,9 @@ public class ShopMod implements ModInitializer {
                     // Use addToMainInventory (slots 0-35 only, no armor/offhand)
                     if (!addToMainInventory(player, taken)) {
                         data.addToStorage(taken);
-                        player.displayClientMessage(Component.literal(I18n.get("msg.inventory_full")), false);
+                        player.sendSystemMessage(Component.literal(I18n.get("msg.inventory_full")));
                     } else {
-                        player.displayClientMessage(Component.literal(I18n.get("msg.trade_item_taken", itemName, itemCount)), false);
+                        player.sendSystemMessage(Component.literal(I18n.get("msg.trade_item_taken", itemName, itemCount)));
                     }
                     mgr.setDirty();
                     player.inventoryMenu.broadcastChanges();
@@ -414,8 +406,8 @@ public class ShopMod implements ModInitializer {
                 String playerName = player.getName().getString();
                 ShopManager mgr = ShopManager.get(ctx.server());
 
-                if (mgr.playerHasShop(playerName, player.getUUID())) {
-                    player.displayClientMessage(Component.literal(I18n.get("msg.shop_exists")), false);
+                if (mgr.hasNpc(playerName)) {
+                    player.sendSystemMessage(Component.literal(I18n.get("msg.shop_exists")));
                     return;
                 }
 
@@ -443,10 +435,10 @@ public class ShopMod implements ModInitializer {
                     data.setOwnerUuid(player.getUUID());
                     mgr.setDirty();
 
-                    player.displayClientMessage(Component.literal(I18n.get("msg.shop_created", playerName)), false);
+                    player.sendSystemMessage(Component.literal(I18n.get("msg.shop_created", playerName)));
                     sendShopsList(player);
                 } else {
-                    player.displayClientMessage(Component.literal("Failed to spawn shop NPC"), false);
+                    player.sendSystemMessage(Component.literal("Failed to spawn shop NPC"));
                 }
             }));
 
@@ -456,9 +448,9 @@ public class ShopMod implements ModInitializer {
                 boolean enabled = payload.enabled();
                 ctx.server().execute(() -> {
                     ServerPlayer player = ctx.player();
-                    ShopManager mgr = ShopManager.get(ctx.server());
-                    if (!isOwner(player, owner, mgr)) return;
+                    if (!player.getName().getString().equals(owner)) return;
 
+                    ShopManager mgr = ShopManager.get(ctx.server());
                     ShopData data = mgr.get(owner);
                     if (data == null) return;
 
@@ -476,8 +468,8 @@ public class ShopMod implements ModInitializer {
                         }
                     }
 
-                    player.displayClientMessage(Component.literal(
-                        enabled ? "Shop Movement: ON" : "Shop Movement: OFF"), false);
+                    player.sendSystemMessage(Component.literal(
+                        enabled ? "Shop Movement: ON" : "Shop Movement: OFF"));
 
                     syncShop(player, data);
                 });
@@ -549,34 +541,6 @@ public class ShopMod implements ModInitializer {
                     LOGGER.info("[ShopMod] Sent all available skins to {}", requesterUuid);
                 });
             });
-
-        // ==================== Recovery System Packets ====================
-
-        // C2S: Player claims a recovery item
-        ServerPlayNetworking.registerGlobalReceiver(ModPackets.CLAIM_RECOVERY_ITEM_ID,
-            (payload, ctx) -> ctx.server().execute(() -> {
-                ServerPlayer player = ctx.player();
-                int index = payload.index();
-                HolderLookup.Provider registries = ctx.server().registryAccess();
-                List<RecoveryData.ItemStackWithSource> items = RecoveryData.load(player.getUUID(), registries);
-                if (items == null || index < 0 || index >= items.size()) return;
-
-                ItemStack stack = items.get(index).stack();
-                if (addToMainInventory(player, stack)) {
-                    RecoveryData.removeItem(player.getUUID(), index, registries);
-                    player.inventoryMenu.broadcastChanges();
-                    // Check if all items recovered
-                    if (RecoveryData.isEmpty(player.getUUID())) {
-                        player.displayClientMessage(Component.literal(I18n.get("msg.all_recovered")), false);
-                        // Close recovery screen
-                        if (player.containerMenu != player.inventoryMenu) {
-                            player.closeContainer();
-                        }
-                    }
-                } else {
-                    player.displayClientMessage(Component.literal(I18n.get("msg.recovery_inventory_full")), false);
-                }
-            }));
     }
 
     public static void syncShop(ServerPlayer player, ShopData data) {
@@ -710,16 +674,5 @@ public class ShopMod implements ModInitializer {
             }
         }
         player.getInventory().setChanged();
-    }
-
-    private static boolean isOwner(ServerPlayer player, String shopOwnerName, ShopManager mgr) {
-        ShopData data = mgr.get(shopOwnerName);
-        if (data == null) return false;
-        // If shop has UUID, compare by UUID (handles name changes)
-        if (data.getOwnerUuid() != null) {
-            return data.getOwnerUuid().equals(player.getUUID());
-        }
-        // Fallback: compare by name
-        return player.getName().getString().equals(shopOwnerName);
     }
 }

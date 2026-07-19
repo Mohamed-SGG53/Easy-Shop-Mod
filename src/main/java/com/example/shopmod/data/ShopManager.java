@@ -10,17 +10,16 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.resources.Identifier;
 
 import java.util.*;
 
 public class ShopManager extends SavedData {
 
-    private static final String KEY = "shopmod_shops";
+    private static final Identifier KEY = Identifier.fromNamespaceAndPath("shopmod", "shops");
 
     private static volatile HolderLookup.Provider cachedRegistries = null;
 
@@ -95,78 +94,6 @@ public class ShopManager extends SavedData {
     public UUID    getNpcId(String owner)           { return npcIds.get(owner); }
     public boolean hasNpc(String owner)             { return npcIds.containsKey(owner); }
     public void    removeNpc(String owner)          { npcIds.remove(owner); setDirty(); }
-
-    // ==================== UUID-based shop lookup ====================
-
-    public String getOwnerNameByUuid(UUID uuid) {
-        if (uuid == null) return null;
-        for (Map.Entry<String, ShopData> entry : shops.entrySet()) {
-            ShopData data = entry.getValue();
-            if (data != null && uuid.equals(data.getOwnerUuid())) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
-
-    public boolean hasShopByUuid(UUID uuid) {
-        return getOwnerNameByUuid(uuid) != null;
-    }
-
-    public ShopData getByUuid(UUID uuid) {
-        String name = getOwnerNameByUuid(uuid);
-        return name != null ? shops.get(name) : null;
-    }
-
-    /** Check if a player already has shop data (by name OR by UUID). */
-    public boolean playerHasShop(String playerName, UUID playerUuid) {
-        if (shops.containsKey(playerName)) return true;
-        if (playerUuid != null && hasShopByUuid(playerUuid)) return true;
-        return false;
-    }
-
-    /** Get list of shop owner names whose ownerUUID is null (old shops before UUID migration). */
-    public List<String> getShopsWithoutUUID() {
-        List<String> result = new ArrayList<>();
-        for (Map.Entry<String, ShopData> entry : shops.entrySet()) {
-            ShopData data = entry.getValue();
-            if (data != null && data.getOwnerUuid() == null) {
-                result.add(entry.getKey());
-            }
-        }
-        return result;
-    }
-
-    /** Repair ownership: link a shop (by ownerName) to the given UUID. */
-    public boolean repairOwnership(String ownerName, UUID uuid) {
-        ShopData data = shops.get(ownerName);
-        if (data == null || uuid == null) return false;
-        data.setOwnerUuid(uuid);
-        setDirty();
-        return true;
-    }
-
-    /** Fully delete a player's shop. Returns the deleted ShopData, or null. */
-    public ShopData deleteShop(String ownerName) {
-        ShopData removed = shops.remove(ownerName);
-        npcIds.remove(ownerName);
-        if (removed != null) setDirty();
-        return removed;
-    }
-
-    /** Remove NPC entity from all worlds and remove npcId mapping. */
-    public void removeNpcEntity(String ownerName, MinecraftServer server) {
-        UUID npcId = npcIds.get(ownerName);
-        if (npcId == null) return;
-        for (ServerLevel level : server.getAllLevels()) {
-            var entity = level.getEntity(npcId);
-            if (entity instanceof Villager villager) {
-                villager.discard();
-            }
-        }
-        npcIds.remove(ownerName);
-        setDirty();
-    }
 
     // NOTE: save() override methods were removed in MC 1.21.11.
     // SavedData no longer has save() methods - serialization is handled entirely by the Codec.

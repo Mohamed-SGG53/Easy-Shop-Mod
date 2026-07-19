@@ -6,7 +6,7 @@ import com.example.shopmod.network.ModPackets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -57,20 +57,14 @@ public class ShopListScreen extends Screen {
         selectedShop = shops.isEmpty() ? -1 : 0;
     }
 
-    private static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
+    private static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x, y, x + w, y + 1, color);
         ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color);
         ctx.fill(x + w - 1, y, x + w, y + h, color);
     }
 
-    // ==================== Avatar Drawing ====================
-
-    /**
-     * Draw a player face using the new file-based skin system.
-     * Loads from config/Easy Shop Mod/AllPlayerSkins/{uuid}.png
-     */
-    private void drawPlayerAvatar(GuiGraphics ctx, UUID uuid, String name, int x, int y) {
+    private void drawPlayerAvatar(GuiGraphicsExtractor ctx, UUID uuid, String name, int x, int y) {
         SkinHelper.drawPlayerFace(ctx, uuid, x, y, FACE_SIZE);
     }
 
@@ -100,13 +94,13 @@ public class ShopListScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics ctx, int mx, int my, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
         ctx.fill(0, 0, width, height, 0x88000000);
         int px = (width - W) / 2, py = (height - H) / 2;
         ctx.fill(px, py, px + W, py + H, 0xCC000000);
         drawBorder(ctx, px, py, W, H, 0xFF8B4513);
         ctx.fill(px, py, px + W, py + 24, 0xFF553311);
-        ctx.drawCenteredString(font, Component.literal(I18n.get("shoplist.title")), px + W / 2, py + 7, 0xFFFFFFFF);
+        ctx.centeredText(font, Component.literal(I18n.get("shoplist.title")), px + W / 2, py + 7, 0xFFFFFFFF);
 
         int listX = px + 8, listY = py + 30, listW = W - 16, listH = VISIBLE_SHOPS * ROW_HEIGHT;
         ctx.fill(listX, listY, listX + listW, listY + listH, 0x88000000);
@@ -114,7 +108,7 @@ public class ShopListScreen extends Screen {
 
         int totalEntries = getTotalEntries();
         if (totalEntries == 0 && !playerHasShop) {
-            ctx.drawCenteredString(font, Component.literal(I18n.get("shoplist.empty")), px + W / 2, listY + listH / 2 - 4, 0xFFFFFFFF);
+            ctx.centeredText(font, Component.literal(I18n.get("shoplist.empty")), px + W / 2, listY + listH / 2 - 4, 0xFFFFFFFF);
         } else {
             int endIdx = Math.min(scrollOffset + VISIBLE_SHOPS, totalEntries);
             for (int i = scrollOffset; i < endIdx; i++) {
@@ -124,24 +118,24 @@ public class ShopListScreen extends Screen {
                 if (isSelected) ctx.fill(rowX, rowY, rowX + rowW, rowY + ROW_HEIGHT, 0x80FFD700);
                 else if (hovered) ctx.fill(rowX, rowY, rowX + rowW, rowY + ROW_HEIGHT, 0x40FFFFFF);
 
-                int avatarY = rowY + (ROW_HEIGHT - FACE_SIZE) / 2; // center 10px face in 24px row
+                int avatarY = rowY + (ROW_HEIGHT - FACE_SIZE) / 2;
                 int textX = rowX + FACE_SIZE + 5;
                 int textY = rowY + 7;
 
                 if (isCreateEntry(i)) {
                     drawPlayerAvatar(ctx, playerUuid, playerName, rowX + 2, avatarY);
-                    ctx.drawString(font, Component.literal(I18n.get("shoplist.create")), textX, textY, 0xFF55FF55);
-                    ctx.drawString(font, Component.literal("+"), rowX + rowW - 16, textY, 0xFF55FF55);
+                    ctx.text(font, Component.literal(I18n.get("shoplist.create")), textX, textY, 0xFF55FF55);
+                    ctx.text(font, Component.literal("+"), rowX + rowW - 16, textY, 0xFF55FF55);
                 } else {
                     ShopEntry entry = getShopEntry(i);
                     if (entry != null) {
                         drawPlayerAvatar(ctx, entry.uuid, entry.ownerName, rowX + 2, avatarY);
-                        ctx.drawString(font, Component.literal(I18n.get("shoplist.shop_of", entry.ownerName)), textX, textY, entry.isOwnShop ? 0xFF55FFFF : 0xFFFFFFFF);
+                        ctx.text(font, Component.literal(I18n.get("shoplist.shop_of", entry.ownerName)), textX, textY, entry.isOwnShop ? 0xFF55FFFF : 0xFFFFFFFF);
                         String offerComp = entry.offerCount == 1
                             ? I18n.get("shoplist.offer_single", entry.offerCount)
                             : I18n.get("shoplist.offer_plural", entry.offerCount);
                         int offerWidth = font.width(offerComp);
-                        ctx.drawString(font, Component.literal(offerComp), rowX + rowW - offerWidth - 6, rowY + 4, 0xFFAAAAAA);
+                        ctx.text(font, Component.literal(offerComp), rowX + rowW - offerWidth - 6, rowY + 4, 0xFFAAAAAA);
                     }
                 }
             }
@@ -153,8 +147,8 @@ public class ShopListScreen extends Screen {
                 ctx.fill(listX + listW - 5, thumbY, listX + listW - 2, thumbY + thumbH, 0xFFAAAAAA);
             }
         }
-        ctx.drawCenteredString(font, Component.literal(I18n.get("shoplist.count", shops.size())), px + W / 2, py + H - 48, 0xFFAAAAAA);
-        super.render(ctx, mx, my, delta);
+        ctx.centeredText(font, Component.literal(I18n.get("shoplist.count", shops.size())), px + W / 2, py + H - 48, 0xFFAAAAAA);
+        super.extractRenderState(ctx, mx, my, delta);
     }
 
     @Override
@@ -184,6 +178,5 @@ public class ShopListScreen extends Screen {
         return true;
     }
 
-    @Override
-    public boolean isPauseScreen() { return false; }
+    @Override public boolean isPauseScreen() { return false; }
 }

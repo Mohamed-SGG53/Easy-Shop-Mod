@@ -1,8 +1,8 @@
 {
   "required": true,
-  "minVersion": "0.8",
+  "minJavaVersion": 25,
   "package": "com.example.shopmod.mixin.client",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [],
   "injectors": {
     "defaultRequire": 1

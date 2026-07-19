@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 public class ShopVillagerEntity extends Villager {
 
@@ -48,13 +49,13 @@ public class ShopVillagerEntity extends Villager {
     }
 
     @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
+    public InteractionResult interact(Player player, InteractionHand hand, Vec3 hitPos) {
         System.out.println("[ShopMod] ShopVillagerEntity.interact called! Owner: " + ownerName + ", CustomName: " + getCustomName());
         InteractionResult result = handleShopInteraction(player);
         if (result != InteractionResult.PASS) {
             return result;
         }
-        return super.interact(player, hand);
+        return super.interact(player, hand, hitPos);
     }
 
     private InteractionResult handleShopInteraction(Player player) {
