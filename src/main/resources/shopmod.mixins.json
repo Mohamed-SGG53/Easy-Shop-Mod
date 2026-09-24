@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minJavaVersion": 25,
+  "package": "com.example.shopmod.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "VillagerEntityMixin",
+    "EntityInvulnerableMixin",
+    "VillagerTickMixin",
+    "VillagerDeathMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
